@@ -1,0 +1,188 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { fetchClients, toSlug } from '../services/clientsApi';
+
+const COLORS = ['#0369A1', '#0891B2', '#0D9488', '#059669', '#4F46E5', '#7C3AED'];
+
+const getInitials = (name) => {
+  return name
+    .split(/\s+/)
+    .filter((w) => w[0] && w[0] === w[0].toUpperCase())
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('');
+};
+
+const Home = () => {
+  const navigate = useNavigate();
+  const userEmail = sessionStorage.getItem('userEmail') || '';
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadClients = async () => {
+      try {
+        const clients = await fetchClients();
+        if (cancelled) return;
+        const mapped = clients.map((client, idx) => ({
+          id: toSlug(client.account_name),
+          name: client.account_name,
+          accountName: client.account_name,
+          initials: getInitials(client.account_name),
+          color: COLORS[idx % COLORS.length],
+        }));
+        setAccounts(mapped);
+      } catch (err) {
+        if (!cancelled) setError('Failed to load accounts');
+        console.error('[Home] Failed to fetch clients:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    loadClients();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Filter accounts based on search
+  const ACCOUNTS = accounts.filter((account) =>
+    account.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('authenticated');
+    sessionStorage.removeItem('userEmail');
+    navigate('/login');
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC]">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/coupa.jpg" alt="Coupa" className="h-9 w-9 rounded-lg object-cover" />
+            <span className="text-[#0F172A] text-lg font-bold tracking-tight">Coupa Finance</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-[#64748B] hidden sm:inline">{userEmail}</span>
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0369A1] to-[#0891B2] flex items-center justify-center text-white text-xs font-bold shadow-sm">
+              {userEmail ? userEmail[0].toUpperCase() : 'U'}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-[#64748B] hover:text-[#0369A1] px-3.5 py-2 rounded-lg hover:bg-[#0369A1]/5 cursor-pointer transition-all font-medium"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Subheader with title + search */}
+      <div className="border-b border-gray-100 bg-white">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-[#0F172A] tracking-tight">Accounts</h1>
+            <p className="text-[13px] text-[#94A3B8] mt-0.5">Select a customer to open their value dashboard</p>
+          </div>
+          <div className="relative w-full sm:w-72">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search accounts..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-[#F8FAFC] text-[#1E293B] text-sm placeholder-[#94A3B8] focus:outline-none focus:border-[#0369A1] focus:ring-2 focus:ring-[#0369A1]/10 focus:bg-white transition-all"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-8">
+        {/* Stats bar */}
+        <div className="flex items-center gap-6 mb-8 text-sm">
+          <span className="text-[#64748B]">
+            <span className="font-semibold text-[#0F172A]">{ACCOUNTS.length}</span> {ACCOUNTS.length === 1 ? 'account' : 'accounts'}
+          </span>
+          {search && (
+            <span className="text-[#94A3B8]">
+              Showing results for "<span className="text-[#0369A1] font-medium">{search}</span>"
+            </span>
+          )}
+        </div>
+
+        {/* Account Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {loading && (
+            <>
+              {[1,2,3].map(i => (
+                <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 animate-pulse">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 mb-5" />
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                </div>
+              ))}
+            </>
+          )}
+          {error && (
+            <div className="col-span-full bg-red-50 text-red-600 text-sm py-8 px-6 rounded-2xl text-center border border-red-100">{error}</div>
+          )}
+          {!loading && !error && ACCOUNTS.length === 0 && (
+            <div className="col-span-full text-[#94A3B8] text-sm py-12 text-center">
+              {search ? 'No accounts match your search.' : 'No accounts available.'}
+            </div>
+          )}
+          {ACCOUNTS.map((account) => (
+            <Link
+              key={account.id}
+              to={`/${account.id}`}
+              state={{ accountName: account.accountName, clientName: account.name }}
+              className="group bg-white rounded-2xl p-6 no-underline transition-all border border-gray-100 hover:border-[#0369A1]/25 hover:shadow-lg hover:shadow-[#0369A1]/[0.06] hover:-translate-y-0.5 flex flex-col"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div className="w-10 h-10 rounded-full bg-[#0369A1]/10 flex items-center justify-center text-[#0369A1] text-[13px] font-bold">
+                  {account.initials}
+                </div>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-transparent group-hover:bg-[#0369A1]/5 transition-colors">
+                  <svg
+                    className="w-4 h-4 text-[#CBD5E1] group-hover:text-[#0369A1] transition-colors"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-[15px] font-semibold text-[#0F172A] group-hover:text-[#0369A1] transition-colors mb-1 leading-snug">
+                {account.name}
+              </h3>
+              <p className="text-[12px] text-[#94A3B8]">Account Intelligence Dashboard</p>
+              <div className="mt-auto pt-5">
+                <div className="h-px bg-gray-100 mb-3" />
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="text-[11px] text-[#94A3B8] font-medium">Active</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-100 mt-8">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-5 flex items-center justify-between">
+          <span className="text-xs text-[#94A3B8]">&copy; 2026 Coupa Finance &middot; Enterprise Intelligence Platform</span>
+          <span className="text-xs text-[#CBD5E1]">Powered by AI</span>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default Home;
