@@ -25,6 +25,18 @@ const TABS = [
   { id: 'plan', label: 'Action Plan' },
 ];
 
+/**
+ * Normalize client name for BigQuery API.
+ * Moves leading "The " to end as ", The" (e.g. "The Progressive Corporation" → "Progressive Corporation, The")
+ */
+const normalizeBqName = (name) => {
+  if (!name) return name;
+  if (name.startsWith('The ')) {
+    return name.slice(4) + ', The';
+  }
+  return name;
+};
+
 // Persistent cache for hero data using localStorage (survives tabs, sign-out, browser restart)
 const HERO_CACHE_PREFIX = 'hero_cache_';
 
@@ -43,14 +55,14 @@ const clearHeroCache = (key) => {
 const PPT_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
-  const bqClientName = clientName;
+  const bqClientName = normalizeBqName(clientName);
   const cachedHero = getHeroCache(bqClientName);
   const [activeTab, setActiveTab] = useState('summary');
   const [heroData, setHeroData] = useState(cachedHero);
   const [heroLoading, setHeroLoading] = useState(!cachedHero);
   const [refreshKey, setRefreshKey] = useState(0);
   const [downloadingPpt, setDownloadingPpt] = useState(false);
-  const { loadAllTabs, refreshAll } = useDashboard();
+  const { loadAllTabs, refreshAll, setExternalTabData } = useDashboard();
 
 
   useEffect(() => {
@@ -130,20 +142,25 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
 
   useEffect(() => {
     // Skip fetch if cached data is available
+    const isRefresh = refreshKey > 0;
+    if (!isRefresh) {
     const cached = getHeroCache(bqClientName);
     if (cached) {
       setHeroData(cached);
       setHeroLoading(false);
+      setExternalTabData('hero', cached);
       return;
     }
+  }
     let cancelled = false;
     const loadHero = async () => {
       try {
-        const raw = await fetchSection(bqClientName, 'hero');
+         const raw = await fetchSection(bqClientName, 'hero', { noCache: isRefresh });
         if (!cancelled) {
           const transformed = transformHeroData(raw);
           setHeroCache(bqClientName, transformed);
           setHeroData(transformed);
+          setExternalTabData('hero', transformed);
         }
       } catch (err) {
         console.error('[Hero] API failed, using fallback:', err);
@@ -305,7 +322,7 @@ const AccountDashboard = () => {
   }
 
   return (
-    <DashboardProvider accountName={clientInfo.accountName}>
+    <DashboardProvider accountName={clientInfo.accountName} clientName={clientInfo.clientName}>
       <AccountDashboardInner
         accountName={clientInfo.accountName}
         clientName={clientInfo.clientName}

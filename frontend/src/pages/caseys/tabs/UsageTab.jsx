@@ -78,11 +78,14 @@ const UsageTab = ({ accountName, clientName }) => {
     if (data && dashboard?.setExternalTabData) dashboard.setExternalTabData('usage', data);
   }, [data, dashboard]);
 
+  const { setExternalTabData } = useDashboard();
+
   const fetchUsageData = useCallback(async () => {
     const c = getUsageCached(customerName);
     if (c) {
       setData(c);
       setLoading(false);
+      setExternalTabData('usage', c);
       return;
     }
     setLoading(true);
@@ -100,6 +103,7 @@ const UsageTab = ({ accountName, clientName }) => {
       }
       const result = await response.json();
       setUsageCached(customerName, result);
+      setExternalTabData('usage', result);
       setData(result);
     } catch (err) {
       setError(err.message || 'Failed to load Usage data');
@@ -122,6 +126,7 @@ const UsageTab = ({ accountName, clientName }) => {
   const onContract = getKpi(kpis, 'on_contract_spend');
   const structured = getKpi(kpis, 'total_structured_spend');
   const nonExt = getKpi(kpis, 'coupa_non_ext_spend');
+  const expenseSpend = getKpi(kpis, 'expense_spend');
 
   // Latest value within the currently-selected view (reacts to the toggle).
   const getLatest = (kpi, view = activeView) => {
@@ -150,9 +155,9 @@ const UsageTab = ({ accountName, clientName }) => {
     return {
       labels: po.map(s => s.period),
       datasets: [
-        { label: 'Coupa PO Spend', data: po.map(s => s.value), backgroundColor: '#00A0DF', borderRadius: 4, maxBarThickness: 42 },
-        { label: 'Non-PO Invoice', data: npo.map(s => s.value), backgroundColor: '#EF4444', borderRadius: 4, maxBarThickness: 42 },
-        { label: 'External PO Invoice', data: ext.map(s => s.value), backgroundColor: '#F59E0B', borderRadius: 4, maxBarThickness: 42 },
+        { label: 'Coupa PO Spend', data: po.map(s => s.value), backgroundColor: '#4285F4', borderRadius: 2 },
+        { label: 'Non-PO Invoice', data: npo.map(s => s.value), backgroundColor: '#EA4335', borderRadius: 2 },
+        { label: 'External PO Invoice', data: ext.map(s => s.value), backgroundColor: '#FBBC04', borderRadius: 2 },
       ],
     };
   };
@@ -166,15 +171,12 @@ const UsageTab = ({ accountName, clientName }) => {
       datasets: [{
         label: 'Total Coupa Spend',
         data: series.map(s => s.value),
-        borderColor: '#00A0DF',
-        backgroundColor: 'rgba(0,160,223,0.12)',
+        borderColor: '#0D652D',
+        backgroundColor: 'rgba(13,101,45,0.1)',
         borderWidth: 2.5,
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: '#00A0DF',
-        pointBorderWidth: 2,
+        tension: 0.35,
+        pointRadius: 3,
+        pointBackgroundColor: '#0D652D',
         fill: true,
       }],
     };
@@ -183,17 +185,17 @@ const UsageTab = ({ accountName, clientName }) => {
   // Chart 3: Doughnut — spend composition for the latest period of the selected view
   const chart3Data = () => {
     const items = [
-      { label: 'Coupa PO', value: getLatest(coupaPo), color: '#00A0DF' },
-      { label: 'Non-PO Invoice', value: getLatest(nonPoInvoice), color: '#EF4444' },
-      { label: 'Ext PO Invoice', value: getLatest(extPoInvoice), color: '#F59E0B' },
-      { label: 'On-Contract', value: getLatest(onContract), color: '#0E9F6E' },
-      { label: 'Structured', value: getLatest(structured), color: '#6353E9' },
-      { label: 'Non-External', value: getLatest(nonExt), color: '#EC4899' },
+      { label: 'Coupa PO', value: getLatest(coupaPo), color: '#4285F4' },
+      { label: 'Non-PO Invoice', value: getLatest(nonPoInvoice), color: '#EA4335' },
+      { label: 'Ext PO Invoice', value: getLatest(extPoInvoice), color: '#FBBC04' },
+      { label: 'On-Contract', value: getLatest(onContract), color: '#34A853' },
+      { label: 'Structured', value: getLatest(structured), color: '#AF57DB' },
+      { label: 'Non-External', value: getLatest(nonExt), color: '#FF7043' },
     ].filter(i => i.value > 0);
     if (!items.length) return null;
     return {
       labels: items.map(i => i.label),
-      datasets: [{ data: items.map(i => i.value), backgroundColor: items.map(i => i.color), borderWidth: 3, borderColor: '#fff', hoverOffset: 6 }],
+      datasets: [{ data: items.map(i => i.value), backgroundColor: items.map(i => i.color), borderWidth: 2, borderColor: '#fff' }],
     };
   };
 
@@ -206,9 +208,9 @@ const UsageTab = ({ accountName, clientName }) => {
     return {
       labels: po.map(s => s.period),
       datasets: [
-        { label: 'Coupa PO Spend', data: po.map(s => s.value), backgroundColor: '#00A0DF', borderRadius: 4, maxBarThickness: 24 },
-        { label: 'External PO Spend', data: ext.map(s => s.value), backgroundColor: '#6353E9', borderRadius: 4, maxBarThickness: 24 },
-        { label: 'Total Invoice Spend', data: inv.map(s => s.value), backgroundColor: '#0E9F6E', borderRadius: 4, maxBarThickness: 24 },
+        { label: 'Coupa PO Spend', data: po.map(s => s.value), backgroundColor: '#4285F4', borderRadius: 3 },
+        { label: 'External PO Spend', data: ext.map(s => s.value), backgroundColor: '#FF6D01', borderRadius: 3 },
+        { label: 'Total Invoice Spend', data: inv.map(s => s.value), backgroundColor: '#46BDC6', borderRadius: 3 },
       ],
     };
   };
@@ -219,16 +221,12 @@ const UsageTab = ({ accountName, clientName }) => {
     const oc = getSeries(onContract, activeView);
     const st = getSeries(structured, activeView);
     const ne = getSeries(nonExt, activeView);
-    const linePoint = (color) => ({
-      borderColor: color, backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.4,
-      pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#fff', pointBorderColor: color, pointBorderWidth: 2, fill: false,
-    });
     return {
       labels: oc.map(s => s.period),
       datasets: [
-        { label: 'On-Contract', data: oc.map(s => s.value), ...linePoint('#0E9F6E') },
-        { label: 'Structured', data: st.map(s => s.value), ...linePoint('#6353E9') },
-        { label: 'Non-External', data: ne.map(s => s.value), ...linePoint('#F59E0B') },
+        { label: 'On-Contract', data: oc.map(s => s.value), borderColor: '#34A853', backgroundColor: 'rgba(52,168,83,0.08)', borderWidth: 2, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#34A853', fill: true },
+        { label: 'Structured', data: st.map(s => s.value), borderColor: '#AF57DB', backgroundColor: 'rgba(175,87,219,0.08)', borderWidth: 2, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#AF57DB', fill: true },
+        { label: 'Non-External', data: ne.map(s => s.value), borderColor: '#FF7043', backgroundColor: 'rgba(255,112,67,0.08)', borderWidth: 2, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#FF7043', fill: true },
       ],
     };
   };
@@ -242,74 +240,65 @@ const UsageTab = ({ accountName, clientName }) => {
     if (!items.length) return null;
     return {
       labels: items.map(i => i.label),
-      datasets: [{ data: items.map(i => i.value), backgroundColor: items.map(i => i.color), borderRadius: 4, maxBarThickness: 18 }],
+      datasets: [{ data: items.map(i => i.value), backgroundColor: items.map(i => i.color), borderRadius: 4 }],
     };
   };
-
-  const commonPlugins = {
-    tooltip: {
-      backgroundColor: '#1E293B', titleColor: '#fff', bodyColor: '#E2E8F0', padding: 10,
-      cornerRadius: 8, titleFont: { size: 11, weight: '600' }, bodyFont: { size: 11 }, displayColors: true, boxPadding: 4,
-    },
-  };
-  const gridStyle = { color: 'rgba(226,232,240,0.6)', drawBorder: false };
-  const axisTicks = { font: { size: 9 }, color: '#94A3B8' };
 
   const stackedOpts = {
     responsive: true, maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, font: { size: 10 }, padding: 10, color: '#64748B' } },
-      tooltip: { ...commonPlugins.tooltip, callbacks: { label: (c) => ` ${c.dataset.label}: ${formatCurrency(c.parsed.y)}` } },
+      legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'rect', boxWidth: 10, font: { size: 10 }, padding: 8 } },
+      tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatCurrency(c.parsed.y)}` } },
     },
     scales: {
-      x: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { ...axisTicks, maxRotation: 45 } },
-      y: { stacked: true, beginAtZero: true, border: { display: false }, ticks: { ...axisTicks, callback: (v) => formatAxisVal(v) }, grid: gridStyle },
+      x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } },
+      y: { stacked: true, beginAtZero: true, ticks: { callback: (v) => formatAxisVal(v), font: { size: 9 } }, grid: { color: '#f1f5f9' } },
     },
   };
 
   const lineOpts = {
     responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false }, tooltip: { ...commonPlugins.tooltip, callbacks: { label: (c) => ` ${c.dataset.label}: ${formatCurrency(c.parsed.y)}` } } },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatCurrency(c.parsed.y)}` } } },
     scales: {
-      x: { grid: { display: false }, border: { display: false }, ticks: { ...axisTicks, maxRotation: 45 } },
-      y: { beginAtZero: true, border: { display: false }, ticks: { ...axisTicks, callback: (v) => formatAxisVal(v) }, grid: gridStyle },
+      x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } },
+      y: { beginAtZero: true, ticks: { callback: (v) => formatAxisVal(v), font: { size: 9 } }, grid: { color: '#f1f5f9' } },
     },
   };
 
   const multiLineOpts = {
     ...lineOpts,
     plugins: {
-      legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, font: { size: 10 }, padding: 10, color: '#64748B' } },
-      tooltip: { ...commonPlugins.tooltip, callbacks: { label: (c) => ` ${c.dataset.label}: ${formatCurrency(c.parsed.y)}` } },
+      legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 }, padding: 8 } },
+      tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatCurrency(c.parsed.y)}` } },
     },
   };
 
   const groupedOpts = {
     responsive: true, maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, font: { size: 10 }, padding: 10, color: '#64748B' } },
-      tooltip: { ...commonPlugins.tooltip, callbacks: { label: (c) => ` ${c.dataset.label}: ${formatCurrency(c.parsed.y)}` } },
+      legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'rect', boxWidth: 10, font: { size: 10 }, padding: 8 } },
+      tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatCurrency(c.parsed.y)}` } },
     },
     scales: {
-      x: { grid: { display: false }, border: { display: false }, ticks: { ...axisTicks, maxRotation: 45 } },
-      y: { beginAtZero: true, border: { display: false }, ticks: { ...axisTicks, callback: (v) => formatAxisVal(v) }, grid: gridStyle },
+      x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } },
+      y: { beginAtZero: true, ticks: { callback: (v) => formatAxisVal(v), font: { size: 9 } }, grid: { color: '#f1f5f9' } },
     },
   };
 
   const doughnutOpts = {
-    responsive: true, maintainAspectRatio: false, cutout: '62%',
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
     plugins: {
-      legend: { position: 'right', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, font: { size: 10 }, padding: 10, color: '#64748B' } },
-      tooltip: { ...commonPlugins.tooltip, callbacks: { label: (c) => ` ${c.label}: ${formatCurrency(c.parsed)}` } },
+      legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 }, padding: 8 } },
+      tooltip: { callbacks: { label: (c) => `${c.label}: ${formatCurrency(c.parsed)}` } },
     },
   };
 
   const horizOpts = {
     indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false }, tooltip: { ...commonPlugins.tooltip, callbacks: { label: (c) => ` ${formatCurrency(c.parsed.x)}` } } },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => formatCurrency(c.parsed.x) } } },
     scales: {
-      x: { beginAtZero: true, border: { display: false }, ticks: { ...axisTicks, callback: (v) => formatAxisVal(v) }, grid: gridStyle },
-      y: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 9 }, color: '#64748B' } },
+      x: { beginAtZero: true, ticks: { callback: (v) => formatAxisVal(v), font: { size: 9 } }, grid: { color: '#f1f5f9' } },
+      y: { grid: { display: false }, ticks: { font: { size: 10 } } },
     },
   };
 
@@ -359,27 +348,25 @@ const UsageTab = ({ accountName, clientName }) => {
           {/* KPI Cards — values reflect the selected view's latest period */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
             {[
-              { kpi: totalCoupa, label: 'Total Coupa Spend', color: '#0D652D' },
-              { kpi: coupaPo, label: 'Coupa PO Spend', color: '#4285F4' },
-              { kpi: nonPoInvoice, label: 'Non-PO Invoice', color: '#EA4335' },
-              { kpi: extPoInvoice, label: 'Ext PO Invoice', color: '#FBBC04' },
-              { kpi: totalInvoice, label: 'Total Invoice Spend', color: '#46BDC6' },
-              { kpi: extPoSpend, label: 'External PO Spend', color: '#FF6D01' },
-              { kpi: onContract, label: 'On-Contract Spend', color: '#34A853' },
-              { kpi: structured, label: 'Structured Spend', color: '#AF57DB' },
-              { kpi: nonExt, label: 'Non-External Spend', color: '#FF7043' },
-            ].map(({ kpi, label, color }) => {
+              { kpi: totalCoupa, label: 'Total Coupa Spend' },
+              { kpi: coupaPo, label: 'Coupa PO Spend' },
+              { kpi: nonPoInvoice, label: 'Non-PO Invoice' },
+              { kpi: extPoInvoice, label: 'Ext PO Invoice' },
+              { kpi: totalInvoice, label: 'Total Invoice Spend' },
+              { kpi: extPoSpend, label: 'External PO Spend' },
+              { kpi: onContract, label: 'On-Contract Spend' },
+              { kpi: structured, label: 'Structured Spend' },
+              { kpi: nonExt, label: 'Non-External Spend' },
+              { kpi: expenseSpend, label: 'Expense Spend' },
+            ].map(({ kpi, label }) => {
               const val = getLatest(kpi);
               const growth = getGrowth(kpi);
               return (
-                <div key={label} className="bg-white border border-[#EDF0F7] rounded-xl p-3 shadow-[0_1px_3px_rgba(16,24,40,0.06)]">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                    <div className="text-[10px] text-[#8A93A8] uppercase tracking-wide font-semibold truncate">{label}</div>
-                  </div>
-                  <div className="text-lg font-bold" style={{ color }}>{formatCurrency(val)}</div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-[#8A93A8]">{latestPeriod || 'Latest'}</span>
+                <div key={label} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 border-l-4 border-l-[#0E9F6E]">
+                  <div className="text-[10px] text-[#5A6180] uppercase tracking-wide font-semibold mb-1">{label}</div>
+                  <div className="text-xl font-bold text-[#1E293B]">{formatCurrency(val)}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] text-[#5A6180]">{latestPeriod || 'Latest'}</span>
                     {growth !== null && (
                       <span className={`text-[10px] font-semibold ${Number(growth) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                         {Number(growth) >= 0 ? '↑' : '↓'}{Math.abs(Number(growth))}%
@@ -394,24 +381,24 @@ const UsageTab = ({ accountName, clientName }) => {
           {/* Row 1: 3 charts */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
             {c1 && (
-              <div className="bg-white border border-[#EDF0F7] rounded-2xl p-5 shadow-[0_1px_3px_rgba(16,24,40,0.06)]">
-                <h3 className="text-sm font-bold text-[#0F1733] mb-0.5">Spend Breakdown</h3>
-                <p className="text-[11px] text-[#8A93A8] mb-4">PO + Non-PO + External PO · {viewLabels[activeView]}</p>
-                <div className="h-[240px]"><Bar data={c1} options={stackedOpts} /></div>
+              <div className="bg-white border border-[#E4E7F1] rounded-xl p-4">
+                <h3 className="text-[13px] font-bold text-[#0F1733] mb-0.5">Spend Breakdown</h3>
+                <p className="text-[10px] text-[#5A6180] mb-3">PO + Non-PO + External PO ({viewLabels[activeView]})</p>
+                <div className="h-[220px]"><Bar data={c1} options={stackedOpts} /></div>
               </div>
             )}
             {c2 && (
-              <div className="bg-white border border-[#EDF0F7] rounded-2xl p-5 shadow-[0_1px_3px_rgba(16,24,40,0.06)]">
-                <h3 className="text-sm font-bold text-[#0F1733] mb-0.5">Total Coupa Spend — Trend</h3>
-                <p className="text-[11px] text-[#8A93A8] mb-4">{viewLabels[activeView]} spend trajectory</p>
-                <div className="h-[240px]"><Line data={c2} options={lineOpts} /></div>
+              <div className="bg-white border border-[#E4E7F1] rounded-xl p-4">
+                <h3 className="text-[13px] font-bold text-[#0F1733] mb-0.5">Total Coupa Spend — Trend</h3>
+                <p className="text-[10px] text-[#5A6180] mb-3">{viewLabels[activeView]} spend trajectory</p>
+                <div className="h-[220px]"><Line data={c2} options={lineOpts} /></div>
               </div>
             )}
             {c3 && (
-              <div className="bg-white border border-[#EDF0F7] rounded-2xl p-5 shadow-[0_1px_3px_rgba(16,24,40,0.06)]">
-                <h3 className="text-sm font-bold text-[#0F1733] mb-0.5">Spend Composition</h3>
-                <p className="text-[11px] text-[#8A93A8] mb-4">Proportion by category · {latestPeriod || 'Latest'}</p>
-                <div className="h-[240px]"><Doughnut data={c3} options={doughnutOpts} /></div>
+              <div className="bg-white border border-[#E4E7F1] rounded-xl p-4">
+                <h3 className="text-[13px] font-bold text-[#0F1733] mb-0.5">Spend Composition</h3>
+                <p className="text-[10px] text-[#5A6180] mb-3">Proportion by category · {latestPeriod || 'Latest'}</p>
+                <div className="h-[220px]"><Doughnut data={c3} options={doughnutOpts} /></div>
               </div>
             )}
           </div>
@@ -419,24 +406,24 @@ const UsageTab = ({ accountName, clientName }) => {
           {/* Row 2: 3 charts */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {c4 && (
-              <div className="bg-white border border-[#EDF0F7] rounded-2xl p-5 shadow-[0_1px_3px_rgba(16,24,40,0.06)]">
-                <h3 className="text-sm font-bold text-[#0F1733] mb-0.5">PO vs Invoice Comparison</h3>
-                <p className="text-[11px] text-[#8A93A8] mb-4">Coupa PO vs External PO vs Total Invoice · {viewLabels[activeView]}</p>
-                <div className="h-[240px]"><Bar data={c4} options={groupedOpts} /></div>
+              <div className="bg-white border border-[#E4E7F1] rounded-xl p-4">
+                <h3 className="text-[13px] font-bold text-[#0F1733] mb-0.5">PO vs Invoice Comparison</h3>
+                <p className="text-[10px] text-[#5A6180] mb-3">Coupa PO vs External PO vs Total Invoice ({viewLabels[activeView]})</p>
+                <div className="h-[220px]"><Bar data={c4} options={groupedOpts} /></div>
               </div>
             )}
             {c5 && (
-              <div className="bg-white border border-[#EDF0F7] rounded-2xl p-5 shadow-[0_1px_3px_rgba(16,24,40,0.06)]">
-                <h3 className="text-sm font-bold text-[#0F1733] mb-0.5">Contract &amp; Structured Spend</h3>
-                <p className="text-[11px] text-[#8A93A8] mb-4">On-Contract vs Structured vs Non-External · {viewLabels[activeView]}</p>
-                <div className="h-[240px]"><Line data={c5} options={multiLineOpts} /></div>
+              <div className="bg-white border border-[#E4E7F1] rounded-xl p-4">
+                <h3 className="text-[13px] font-bold text-[#0F1733] mb-0.5">Contract & Structured Spend</h3>
+                <p className="text-[10px] text-[#5A6180] mb-3">On-Contract vs Structured vs Non-External ({viewLabels[activeView]})</p>
+                <div className="h-[220px]"><Line data={c5} options={multiLineOpts} /></div>
               </div>
             )}
             {c6 && (
-              <div className="bg-white border border-[#EDF0F7] rounded-2xl p-5 shadow-[0_1px_3px_rgba(16,24,40,0.06)]">
-                <h3 className="text-sm font-bold text-[#0F1733] mb-0.5">KPI Snapshot</h3>
-                <p className="text-[11px] text-[#8A93A8] mb-4">All spend categories ranked · {latestPeriod || 'Latest'}</p>
-                <div className="h-[240px]"><Bar data={c6} options={horizOpts} /></div>
+              <div className="bg-white border border-[#E4E7F1] rounded-xl p-4">
+                <h3 className="text-[13px] font-bold text-[#0F1733] mb-0.5">KPI Snapshot</h3>
+                <p className="text-[10px] text-[#5A6180] mb-3">All spend categories ranked · {latestPeriod || 'Latest'}</p>
+                <div className="h-[220px]"><Bar data={c6} options={horizOpts} /></div>
               </div>
             )}
           </div>

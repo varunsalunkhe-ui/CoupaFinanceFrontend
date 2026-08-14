@@ -125,8 +125,8 @@ const queryAgent = async (prompt, sessionId = null, retries = 3) => {
 };
 
 
-export const fetchAllTabsInSession = async (accountName, onTabResult) => {
-  const tabKeys = Object.keys(TAB_PROMPTS);
+export const fetchAllTabsInSession = async (accountName, onTabResult, tabKeysToFetch = null) => {
+  const tabKeys = tabKeysToFetch || Object.keys(TAB_PROMPTS);
 
   const promises = tabKeys.map(async (tabKey) => {
     const prompt = TAB_PROMPTS[tabKey](accountName);

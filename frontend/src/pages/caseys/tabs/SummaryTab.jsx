@@ -140,7 +140,7 @@ const AdoptionWinsCard = ({ data }) => (
     {data.utilizationStats && (
       <div className="flex items-center gap-3 mb-3">
         <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
-          Users: {data.utilizationStats.activeUsers} / {data.utilizationStats.totalUsers} ({data.utilizationStats.utilizationPercent}%)
+          Users: {data.utilizationStats.activeUsers} / {data.utilizationStats.totalUsers} ({data.utilizationStats.utilizationPercent})
         </span>
       </div>
     )}
@@ -158,7 +158,10 @@ const BenchmarkCard = ({ data }) => (
   <CardWrapper cardKey="benchmarkMethodology" summary={data.summary}>
     <ul className="pl-5 text-sm leading-7 list-disc">
       {data.items.map((item, i) => (
-        <li key={i}>{item.name}</li>
+       <li key={i}>
+          <strong>{item.name}:</strong> {item.customerValue}
+          {item.industryBenchmark && <span className="text-[#5A6180]"> (benchmark: {item.industryBenchmark})</span>}
+        </li>
       ))}
     </ul>
   </CardWrapper>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TabLoader from '../../../components/TabLoader';
 import { getDailyCached, setDailyCached, clearCachedByPrefix } from '../../../services/cacheStorage';
+import { useDashboard } from '../../../context/DashboardContext';
 
 const AI_AGENTS_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -125,12 +126,14 @@ const AIAgentsTab = ({ accountName, clientName }) => {
   const [data, setData] = useState(cached);
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState(null);
+  const { setExternalTabData } = useDashboard();
 
   const fetchAgentAccess = useCallback(async () => {
     const c = getAgentsCached(customerName);
     if (c) {
       setData(c);
       setLoading(false);
+      setExternalTabData('aiAgents', c);
       return;
     }
     setLoading(true);
@@ -138,7 +141,7 @@ const AIAgentsTab = ({ accountName, clientName }) => {
     try {
       const params = new URLSearchParams({ customer_name: customerName, section: 'ai-agents' });
       const response = await fetch(`${AI_AGENTS_API_BASE}/section?${params.toString()}`, {
-        headers: { 'accept': 'application/json' },
+        headers: { 'accept': 'application/json', 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
       });
       if (!response.ok) {
         throw new Error(`Failed to fetch AI Agents data (${response.status})`);
@@ -146,6 +149,7 @@ const AIAgentsTab = ({ accountName, clientName }) => {
       const result = await response.json();
       setAgentsCached(customerName, result);
       setData(result);
+      setExternalTabData('aiAgents', result);
     } catch (err) {
       setError(err.message || 'Failed to load AI Agents data');
     } finally {

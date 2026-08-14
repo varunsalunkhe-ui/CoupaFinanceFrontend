@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TabLoader from '../../../components/TabLoader';
 import { getDailyCached, setDailyCached, clearCachedByPrefix } from '../../../services/cacheStorage';
+import { useDashboard } from '../../../context/DashboardContext';
 
 const CUSTOMER_VALUE_API = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -19,7 +20,7 @@ export const clearSnapshotCache = () => {
 };
 
 const formatCurrency = (val) => {
-  if (val === null || val === undefined || val === 'NA') return 'N/A';
+  if (val === null || val === undefined || val === 'NA') return ' — ';
   const num = Number(val);
   if (isNaN(num)) return String(val);
   if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
@@ -38,7 +39,7 @@ const parseNumericValue = (val) => {
 };
 
 const formatCurrencyLegend = (val) => {
-  if (val === null || val === undefined || Number.isNaN(val)) return 'N/A';
+  if (val === null || val === undefined || Number.isNaN(val)) return ' — ';
   if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
   if (val >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
   if (val >= 1e3) return `$${(val / 1e3).toFixed(1)}K`;
@@ -49,16 +50,16 @@ const formatCurrencyFull = (numericVal, fallbackVal) => {
   if (numericVal !== null && numericVal !== undefined && Number.isFinite(numericVal)) {
     return `$${numericVal.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
   }
-  return fallbackVal || 'N/A';
+  return fallbackVal || ' — ';
 };
 
 const formatDays = (val) => {
-  if (val === null || val === undefined || val === 'NA') return 'N/A';
+  if (val === null || val === undefined || val === 'NA') return ' — ';
   return `${val} days`;
 };
 
 const formatPercent = (val) => {
-  if (val === null || val === undefined || val === 'NA') return 'N/A';
+  if (val === null || val === undefined || val === 'NA') return ' — ';
   return `${Number(val).toFixed(0)}%`;
 };
 
@@ -75,11 +76,30 @@ const SnapshotTab = ({ accountName, clientName }) => {
     return () => { unmountedRef.current = true; };
   }, []);
 
+  // Sanitize API-provided sentinel strings like 'N/A' or 'NA' into a display dash
+  const sanitizeData = (obj) => {
+    if (obj == null) return obj;
+    if (typeof obj === 'string') {
+      if (obj === 'N/A' || obj === 'NA') return ' — ';
+      return obj;
+    }
+    if (typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(sanitizeData);
+    const out = {};
+    Object.keys(obj).forEach((k) => {
+      out[k] = sanitizeData(obj[k]);
+    });
+    return out;
+  };
+
+  const { setExternalTabData } = useDashboard();
+
   const fetchData = useCallback(async () => {
     const c = getSnapshotCached(customerName);
     if (c) {
       setData(c);
       setLoading(false);
+      setExternalTabData('snapshot', c);
       return;
     }
     setLoading(true);
@@ -87,13 +107,15 @@ const SnapshotTab = ({ accountName, clientName }) => {
     try {
       const params = new URLSearchParams({ customer_name: customerName, section: 'value_snapshot' });
       const response = await fetch(`${CUSTOMER_VALUE_API}/section?${params.toString()}`, {
-        headers: { accept: 'application/json' },
+        headers: { accept: 'application/json', 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
       });
       if (!response.ok) throw new Error(`Failed to fetch (${response.status})`);
       const result = await response.json();
-      setSnapshotCached(customerName, result);
+      const sanitized = sanitizeData(result);
+      setSnapshotCached(customerName, sanitized);
       if (!unmountedRef.current) {
-        setData(result);
+        setData(sanitized);
+        setExternalTabData('snapshot', sanitized);
       }
     } catch (err) {
       if (!unmountedRef.current) {
@@ -231,7 +253,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                 <div className="p-4">
                   <div className="text-[10px] uppercase tracking-wider text-[#DC2626] font-bold mb-3 ">Procurement</div>
                   <div className="mb-3 ">
-                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Spend Under Contract — Savings Capture</div>
+                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">On-Contract Savings</div>
                     <div className="text-2xl font-bold text-[#0F1733]">{formatCurrency(data.Spend_Under_Contract_Savings_Capture)}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Spend_Under_Contract_Savings_Capture_text || ''}</div>
                   </div>
@@ -284,7 +306,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                   <div className="text-[10px] uppercase tracking-wider text-[#16A34A] font-bold mb-3">Sourcing</div>
                   
                   <div>
-                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Sourcing Projects</div>
+                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Number of Sourcing Events</div>
                     <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Sourcing_Projects}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Sourcing_Projects_text || ''}</div>
                   </div>
@@ -392,7 +414,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                   <tr className="border-b border-[#E4E7F1]">
                     <td className="px-3 py-2.5 text-[#0F1733]">Reduce Time & Effort to process invoices</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Invoice Smash / Invoicing / Rossum</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.Reduce_Time_and_Effort_to_process_invoices ? `${data.Reduce_Time_and_Effort_to_process_invoices} day reduction` : 'N/A'}</td>
+                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.Reduce_Time_and_Effort_to_process_invoices ? `${data.Reduce_Time_and_Effort_to_process_invoices} day reduction` : ' — '}</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycle Time − Current Year invoice cycle time</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">18.3 days from ingestion to processed</td>
                   </tr>
@@ -405,7 +427,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                   </tr>
 
                   {/* Platform */}
-                  {(() => { const isNA1 = formatCurrency(data['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Smart_Intake_and_Orchestration']) === 'N/A'; return (
+                  {(() => { const isNA1 = parseNumericValue(data['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Smart_Intake_and_Orchestration']) == null; return (
                   <tr className={`border-b border-[#E4E7F1] ${isNA1 ? 'opacity-40' : ''}`}>
                     <td rowSpan={2} className="px-3 py-2.5 font-semibold text-[#0F1733] align-top border-r border-[#E4E7F1]">Platform</td>
                     <td className="px-3 py-2.5 text-[#0F1733]">Increase Savings Capture Rate by improving On-Contract Spend</td>
@@ -418,7 +440,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                   <tr className={`border-b border-[#E4E7F1] ${isNA2 ? 'opacity-40' : ''}`}>
                     <td className="px-3 py-2.5 text-[#0F1733]">PO Processing Efficiency</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Smart Intake & Orchestration</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.PO_Processing_Efficiency_smart_intake_and_orchestration ? `${data.PO_Processing_Efficiency_smart_intake_and_orchestration} day reduction` : 'N/A'}</td>
+                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.PO_Processing_Efficiency_smart_intake_and_orchestration ? `${data.PO_Processing_Efficiency_smart_intake_and_orchestration} day reduction` : ' — '}</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycletime − CY PR to PO cycle time</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">6−7 business days</td>
                   </tr>); })()}
@@ -436,7 +458,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                   <tr className={`border-b border-[#E4E7F1] ${isNA ? 'opacity-40' : ''}`}>
                     <td className="px-3 py-2.5 text-[#0F1733]">PO Processing Efficiency</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Core Procurement</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.PO_Processing_Efficiency_Core_Procurement ? `${data.PO_Processing_Efficiency_Core_Procurement} day reduction` : 'N/A'}</td>
+                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.PO_Processing_Efficiency_Core_Procurement ? `${data.PO_Processing_Efficiency_Core_Procurement} day reduction` : ' — '}</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycle time − CY PR to PO cycle time</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">6−7 business days</td>
                   </tr>); })()}
@@ -447,7 +469,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                     <td rowSpan={2} className="px-3 py-2.5 font-semibold text-[#0F1733] align-top border-r border-[#E4E7F1]">Strategic Sourcing</td>
                     <td className="px-3 py-2.5 text-[#0F1733]">Increase Spend On Contract Through More Sourcing Activities</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Coupa Sourcing / Coupa Sourcing Optimization</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{isNA ? 'N/A' : formatCurrency(data.Increase_Spend_On_Contract_Through_More_Sourcing_Activities)}</td>
+                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{isNA ? ' — ' : formatCurrency(data.Increase_Spend_On_Contract_Through_More_Sourcing_Activities)}</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">(current year sourced spend % − benchmark sourced spend%) × sourced spend × 0.04%</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">15% of spend sourced annually</td>
                   </tr>); })()} 
@@ -455,7 +477,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                   <tr className={`border-b border-[#E4E7F1] ${isNA ? 'opacity-40' : ''}`}>
                     <td className="px-3 py-2.5 text-[#0F1733]">Total Sourcing Savings</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Coupa Sourcing / Coupa Sourcing Optimization</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{isNA ? 'N/A' : formatCurrency(data.Total_Sourcing_Savings)}</td>
+                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{isNA ? ' — ' : formatCurrency(data.Total_Sourcing_Savings)}</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Current year sourced spend × 0.04%</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]"></td>
                   </tr>); })()}
@@ -465,7 +487,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                     <td className="px-3 py-2.5 font-semibold text-[#0F1733] align-top border-r border-[#E4E7F1]">Supplier Information & Risk Management</td>
                     <td className="px-3 py-2.5 text-[#0F1733]">Reduce time to manage supplier information</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Risk Assess (RPMA) / Risk Aware (RPM)</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#5A6180]">N/A</td>
+                    <td className="px-3 py-2.5 font-semibold text-[#5A6180]"> — </td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">CY Onboarded suppliers × (Benchmark onboard cycle time − CY onboard cycle time in weeks)</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">15−35 business days</td>
                   </tr>

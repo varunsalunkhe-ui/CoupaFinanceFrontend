@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TabLoader from '../../../components/TabLoader';
 import { getDailyCached, setDailyCached, clearCachedByPrefix } from '../../../services/cacheStorage';
+import { useDashboard } from '../../../context/DashboardContext';
 
 const PORTFOLIO_API = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -126,6 +127,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState(null);
   const unmountedRef = useRef(false);
+  const { setExternalTabData } = useDashboard();
 
   useEffect(() => {
     unmountedRef.current = false;
@@ -137,6 +139,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
     if (c) {
       setData(c);
       setLoading(false);
+      setExternalTabData('portfolio', c);
       return;
     }
     setLoading(true);
@@ -145,12 +148,15 @@ const PortfolioTab = ({ accountName, clientName }) => {
       const params = new URLSearchParams({ customer_name: customerName, section: 'product-portfolio' });
       const response = await fetch(
         `${PORTFOLIO_API}/section?${params.toString()}`,
-        { headers: { accept: 'application/json' } }
+        { headers: { accept: 'application/json', 'Cache-Control': 'no-cache', Pragma: 'no-cache' } }
       );
       if (!response.ok) throw new Error(`Failed to fetch (${response.status})`);
       const result = await response.json();
       setPortfolioCached(customerName, result);
-      if (!unmountedRef.current) setData(result);
+      if (!unmountedRef.current) {
+        setData(result);
+        setExternalTabData('portfolio', result);
+      }
     } catch (err) {
       if (!unmountedRef.current) setError(err.message || 'Failed to load Product Portfolio');
     } finally {

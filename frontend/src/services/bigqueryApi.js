@@ -6,11 +6,21 @@ const BQ_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
  * Fetch a section from the BigQuery API.
  * @param {string} customerName - e.g. "Casey's General Stores Inc."
  * @param {string} section - e.g. "hero"
+ * @param {object} [options] - Optional settings
+ * @param {boolean} [options.noCache] 
  */
-export const fetchSection = async (customerName, section) => {
+export const fetchSection = async (customerName, section, { noCache = false } = {}) => {
+  const params = { customer_name: customerName, section };
+  if (noCache) {
+    params._t = Date.now();
+  }
   const response = await axios.get(`${BQ_BASE_URL}/section`, {
-    params: { customer_name: customerName, section },
-    headers: { Accept: 'application/json' },
+    params,
+    headers: {
+      Accept: 'application/json',
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    },
     timeout: 30000,
   });
   return response.data;
@@ -43,8 +53,8 @@ export const transformHeroData = (raw) => {
     : '0';
 
   const tags = [
-    { text: `Heat Level: ${raw.CUSTOMER_HEAT_LEVEL || 'N/A'}`, color: raw.CUSTOMER_HEAT_LEVEL === 'Successful' ? 'success' : 'warning' },
-    { text: `CVM Rating: ${raw.CVM_CUSTOMER_RATING || 'N/A'}`, color: 'success' },
+    { text: `Heat Level: ${raw.CUSTOMER_HEAT_LEVEL || ' — '}`, color: raw.CUSTOMER_HEAT_LEVEL === 'Successful' ? 'success' : 'warning' },
+    { text: `CVM Rating: ${raw.CVM_CUSTOMER_RATING || ' — '}`, color: 'success' },
   ];
   if (raw.spendsetter_of_the_year_award) {
     tags.push({ text: `Spendsetter of the Year ${raw.spendsetter_of_the_year_award}`, color: 'success' });
@@ -58,13 +68,13 @@ export const transformHeroData = (raw) => {
     contractTerm: `Contract term: ${formatDate(raw.CONTRACT_START_DATE)} – ${formatDate(raw.CONTRACT_END_DATE)}`,
     metaGrid: [
       { label: 'Go-Live', value: formatDate(raw.go_live) },
-      { label: 'Primary ERP', value: raw.primary_erp || 'N/A' },
-      { label: 'Implementation Partner', value: raw.implementation_partner || 'N/A' },
+      { label: 'Primary ERP', value: raw.primary_erp || ' — ' },
+      { label: 'Implementation Partner', value: raw.implementation_partner || ' — ' },
       { label: 'P2P Active Users', value: `${p2pActual.toLocaleString()} / ${p2pLicensed.toLocaleString()} (${p2pPct}%)` },
       { label: 'Active Production Users', value: (raw.active_production_users || 0).toLocaleString() },
-      { label: 'Exec Sponsor', value: raw.COUPA_EXECUTIVE_SPONSOR_NAME || 'N/A' },
-      { label: 'CVM Owner', value: raw.CVM_OWNER || 'N/A' },
-      { label: 'Account Owner', value: raw.ACCOUNT_OWNER || 'N/A' },
+      { label: 'Exec Sponsor', value: raw.COUPA_EXECUTIVE_SPONSOR_NAME || ' — ' },
+      { label: 'CVM Owner', value: raw.CVM_OWNER || ' — ' },
+      { label: 'Account Owner', value: raw.ACCOUNT_OWNER || ' — ' },
       { label: 'Last Check-in', value: formatDate(raw.LAST_CUSTOMER_CHECKIN) },
       { label: 'Open Cases', value: String(raw.COUNT_OF_OPEN_CASES ?? 0) },
     ],
