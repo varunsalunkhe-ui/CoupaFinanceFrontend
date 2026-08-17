@@ -69,8 +69,8 @@ export const transformHeroData = (raw) => {
     metaGrid: [
       { label: 'Go-Live', value: formatDate(raw.go_live) },
       { label: 'Primary ERP', value: raw.primary_erp || ' — ' },
-      { label: 'CAM', value: raw.CAM || ' — ' },
-      { label: 'SAM', value: raw.SAM || ' — ' },
+      { label: 'CUSTOMER ADOPTION MANAGER', value: raw.CAM || ' — ' },
+      { label: 'SUPPORT ACCOUNT MANAGER', value: raw.SAM || ' — ' },
       { label: 'P2P Active Users', value: `${p2pActual.toLocaleString()} / ${p2pLicensed.toLocaleString()} (${p2pPct}%)` },
       { label: 'Active Production Users', value: (raw.active_production_users || 0).toLocaleString() },
       { label: 'Exec Sponsor', value: raw.COUPA_EXECUTIVE_SPONSOR_NAME || ' — ' },
