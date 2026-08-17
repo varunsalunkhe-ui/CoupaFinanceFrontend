@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 /**
- * Validate if a Google-authenticated email is authorized to use the app.
+ * Validate if a okta-authenticated email is authorized to use the app.
  * Calls GET /users/{email} — returns true if authorized, false otherwise.
  */
 export const validateUserEmail = async (email) => {
@@ -24,15 +24,4 @@ export const validateUserEmail = async (email) => {
   }
 };
 
-/**
- * Fetch Google user profile using the access token.
- */
-export const fetchGoogleUserInfo = async (accessToken) => {
-  const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!response.ok) {
-    throw new Error('Failed to fetch Google profile');
-  }
-  return response.json();
-};
+

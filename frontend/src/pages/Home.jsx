@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchClients, toSlug } from '../services/clientsApi';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const COLORS = ['#0369A1', '#0891B2', '#0D9488', '#059669', '#4F46E5', '#7C3AED'];
 
@@ -16,6 +17,7 @@ const getInitials = (name) => {
 const Home = () => {
   const navigate = useNavigate();
   const userEmail = sessionStorage.getItem('userEmail') || '';
+  const { user, role, logout } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,9 +54,7 @@ const Home = () => {
   );
 
   const handleLogout = () => {
-    sessionStorage.removeItem('authenticated');
-    sessionStorage.removeItem('userEmail');
-    navigate('/login');
+    logout();
   };
 
   return (

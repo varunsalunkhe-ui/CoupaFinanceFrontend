@@ -1,27 +1,28 @@
 /**
  * User persona configuration for account-based access control.
- * Each user email maps to a list of account IDs they can access.
+ * Each user email maps to a role and list of account IDs they can access.
+ * Roles: 'Admin' (full access), 'CVM' (view/edit/export), 'AE' (view only)
  */
 
 const USER_PERSONAS = {
-  // User 1: Can see only Casey's (1 account)
   'user1@coupa.com': {
     name: 'User 1',
+    role: 'AE',
     accounts: ['caseys'],
   },
-  // User 2: Can see Tyson Foods and Progressive (2 accounts)
   'user2@coupa.com': {
     name: 'User 2',
+    role: 'CVM',
     accounts: ['tyson-foods', 'progressive'],
   },
-  // User 3: Can see 3 accounts
   'user3@coupa.com': {
     name: 'User 3',
+    role: 'CVM',
     accounts: ['caseys', 'tyson-foods', 'progressive'],
   },
-  // Admin: Can see all accounts (wildcard '*' means all)
   'admin@coupa.com': {
     name: 'Admin',
+    role: 'Admin',
     accounts: ['*'],
   },
 };
@@ -35,6 +36,14 @@ export const VALID_PASSWORD = 'coupa2026';
 export const getPersona = (email) => {
   const normalizedEmail = email.trim().toLowerCase();
   return USER_PERSONAS[normalizedEmail] || null;
+};
+
+/**
+ * Returns the role for a given email. Defaults to 'AE' if no persona found.
+ */
+export const getUserRole = (email) => {
+  const persona = getPersona(email);
+  return persona?.role || 'AE';
 };
 
 /**
