@@ -283,7 +283,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
           )}
 
           {/* ═══ HEATMAP ═══ */}
-          {data.heatmap && (() => {
+          {/* {data.heatmap && (() => {
             const { columns, aiPlatform } = buildHeatmapData(data.heatmap);
             const adoptedCount = summary?.successfulCount || 0;
             const underusedCount = summary?.concernedCount || 0;
@@ -293,7 +293,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
             const maxRows = Math.max(...columns.map(c => c.products.length), 1);
             return (
               <div className="mb-8 mt-10 bg-[#F8F9FC] rounded-2xl p-6 border border-[#E4E7F1]">
-                {/* Heatmap Title */}
+              
                 <h3 className="text-[16px] font-bold text-[#0F1733] mb-1">
                   Coupa Product Landscape — Adoption Heatmap
                 </h3>
@@ -301,7 +301,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
                   Every SKU Coupa sells, mapped to current state. Classification reconciled from Customer 360 entitlements, live usage dashboards, and the upsell landscape.
                 </p>
 
-                {/* Heatmap Legend */}
+              
                 <div className="flex flex-wrap items-center gap-5 mb-6 text-[11px]">
                   <span className="flex items-center gap-1.5">
                     <span className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#BCE2F5' }}></span>
@@ -324,7 +324,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
                   </span>
                 </div>
 
-                {/* Column Headers */}
+           
                 <div className="grid grid-cols-7 gap-1.5 mb-3">
                   {columns.map((col) => (
                     <div
@@ -337,7 +337,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
                   ))}
                 </div>
 
-                {/* Heatmap Grid - Row by Row */}
+              
                 {Array.from({ length: maxRows }).map((_, rowIdx) => (
                   <div key={rowIdx} className="grid grid-cols-7 gap-1.5 mb-1.5">
                     {columns.map((col) => {
@@ -356,7 +356,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
                   </div>
                 ))}
 
-                {/* AI & Platform Ecosystem */}
+                
                 <div className="mt-8">
                   <p className="text-[11px] uppercase tracking-[0.1em] font-bold text-[#5A6180] mb-3">
                     COUPA AI & PLATFORM & ECOSYSTEM
@@ -387,7 +387,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
                   </div>
                 </div>
 
-                {/* Heatmap Summary Stats */}
+                
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-[#E4E7F1]">
                   <div>
                     <div className="text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Modules Have Been Adopted</div>
@@ -412,7 +412,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
                 </div>
               </div>
             );
-          })()}
+          })()} */}
 
           {/* ═══ Summary Stats ═══ */}
           {/* {summary && (

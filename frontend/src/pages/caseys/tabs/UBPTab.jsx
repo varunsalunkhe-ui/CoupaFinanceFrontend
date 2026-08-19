@@ -94,7 +94,7 @@ const UBPTab = ({ accountName }) => {
               {keyMetricsArray.map((m, i) => {
                 const labels = {
                   currentACV: 'CURRENT ACV',
-                  estimatedP2PSum: 'ESTIMATED P2P $SUM',
+                  estimatedP2PSum: 'Estimated UBP Spend',
                   customerTier: 'CUSTOMER TIER',
                   estUBPListACV: 'EST. UBP LIST ACV',
                 };

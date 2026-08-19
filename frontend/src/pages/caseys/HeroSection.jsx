@@ -26,7 +26,6 @@ const HeroSection = ({ data }) => {
           <div className="text-[11px] uppercase opacity-70 tracking-wider">Open Opp Renewal ACV</div>
           <div className="text-3xl font-bold">{data.openAcv}</div>
           <div className="text-xs opacity-80">{data.contractTerm}</div>
-          <div className="text-[11px] opacity-65 mt-1">{data.priorAcv}</div>
         </div>
       </div>
 

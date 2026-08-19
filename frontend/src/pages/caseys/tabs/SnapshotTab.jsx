@@ -243,7 +243,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
             <div className="flex items-center justify-between mb-4 pb-1.5 border-b-2 border-[#E4E7F1]">
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6180]">Section 2 · Value Metrics (KPIs)</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {/* Sourcing */}
               
 
@@ -258,7 +258,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                     <div className="text-[11px] text-[#5A6180]">{data.Spend_Under_Contract_Savings_Capture_text || ''}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">PR to PO Cycle Time</div>
+                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Requisition Cycle Time</div>
                     <div className="text-2xl font-bold text-[#0F1733]">{formatDays(data.PR_to_PO_Cycle_Time)}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.PR_to_PO_Cycle_Time_text || ''}</div>
                   </div>
@@ -287,20 +287,20 @@ const SnapshotTab = ({ accountName, clientName }) => {
               <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
                 <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
                 <div className="p-4">
-                  <div className="text-[10px] uppercase tracking-wider text-[#7C3AED] font-bold mb-3">Additional</div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#7C3AED] font-bold mb-3">Contracts & Sourcing</div>
                   <div className="mb-3">
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Contracts</div>
                     <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Contracts}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Contracts_text || ''}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Early Pay Discounts Captured</div>
-                    <div className="text-2xl font-bold text-[#0F1733]">{formatCurrency(data.Early_Pay_Discounts_Captured)}</div>
-                    <div className="text-[11px] text-[#5A6180]">{data.Early_Pay_Discounts_Captured_text || ''}</div>
+                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Number of Sourcing Events</div>
+                    <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Sourcing_Projects}</div>
+                    <div className="text-[11px] text-[#5A6180]">{data.Total_Sourcing_Projects_text || ''}</div>
                   </div>
                 </div>
               </div>
-              <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
+              {/* <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
                 <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
                 <div className="p-4">
                   <div className="text-[10px] uppercase tracking-wider text-[#16A34A] font-bold mb-3">Sourcing</div>
@@ -311,7 +311,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Sourcing_Projects_text || ''}</div>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -441,7 +441,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                     <td className="px-3 py-2.5 text-[#0F1733]">PO Processing Efficiency</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Smart Intake & Orchestration</td>
                     <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.PO_Processing_Efficiency_smart_intake_and_orchestration ? `${data.PO_Processing_Efficiency_smart_intake_and_orchestration} day reduction` : ' — '}</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycletime − CY PR to PO cycle time</td>
+                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycletime − CY Requisition Cycle Time</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">6−7 business days</td>
                   </tr>); })()}
 
@@ -459,7 +459,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                     <td className="px-3 py-2.5 text-[#0F1733]">PO Processing Efficiency</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Core Procurement</td>
                     <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.PO_Processing_Efficiency_Core_Procurement ? `${data.PO_Processing_Efficiency_Core_Procurement} day reduction` : ' — '}</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycle time − CY PR to PO cycle time</td>
+                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycle time − CY Requisition Cycle Time</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">6−7 business days</td>
                   </tr>); })()}
 

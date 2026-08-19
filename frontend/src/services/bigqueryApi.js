@@ -52,9 +52,17 @@ export const transformHeroData = (raw) => {
     ? ((p2pActual / p2pLicensed) * 100).toFixed(1)
     : '0';
 
+  const annualRevenue = raw.ANNUAL_REVENUE_USD || 0;
+  const revenueFormatted = annualRevenue >= 1_000_000_000
+    ? `$${(annualRevenue / 1_000_000_000).toFixed(2).replace(/\.?0+$/, '')}B`
+    : annualRevenue >= 1_000_000
+      ? `$${(annualRevenue / 1_000_000).toFixed(2).replace(/\.?0+$/, '')}M`
+      : `$${(annualRevenue / 1_000).toFixed(0)}K`;
+
   const tags = [
     { text: `Heat Level: ${raw.CUSTOMER_HEAT_LEVEL || ' — '}`, color: raw.CUSTOMER_HEAT_LEVEL === 'Successful' ? 'success' : 'warning' },
     { text: `CVM Rating: ${raw.CVM_CUSTOMER_RATING || ' — '}`, color: 'success' },
+    { text: `ANNUAL REVENUE USD: ${revenueFormatted || ' — '}`, color: 'success' }
   ];
   if (raw.spendsetter_of_the_year_award) {
     tags.push({ text: `Spendsetter of the Year ${raw.spendsetter_of_the_year_award}`, color: 'success' });
@@ -65,6 +73,7 @@ export const transformHeroData = (raw) => {
     subtext: raw.company_subtext,
     tags,
     openAcv: acvFormatted,
+    annualRevenue: revenueFormatted,
     contractTerm: `Contract term: ${formatDate(raw.CONTRACT_START_DATE)} – ${formatDate(raw.CONTRACT_END_DATE)}`,
     metaGrid: [
       { label: 'Go-Live', value: formatDate(raw.go_live) },
@@ -77,7 +86,7 @@ export const transformHeroData = (raw) => {
       { label: 'CVM Owner', value: raw.CVM_OWNER || ' — ' },
       { label: 'Account Owner', value: raw.ACCOUNT_OWNER || ' — ' },
       { label: 'Last Check-in', value: formatDate(raw.LAST_CUSTOMER_CHECKIN) },
-      { label: 'Open Cases', value: String(raw.COUNT_OF_OPEN_CASES ?? 0) },
+      { label: 'Open Cases', value: String(raw.COUNT_OF_OPEN_CASES ?? 0) }
     ],
   };
 };
