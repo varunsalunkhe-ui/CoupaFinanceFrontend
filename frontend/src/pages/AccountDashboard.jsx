@@ -25,17 +25,6 @@ const TABS = [
   { id: 'plan', label: 'Action Plan' },
 ];
 
-/**
- * Normalize client name for BigQuery API.
- * Moves leading "The " to end as ", The" (e.g. "The Progressive Corporation" → "Progressive Corporation, The")
- */
-const normalizeBqName = (name) => {
-  if (!name) return name;
-  if (name.startsWith('The ')) {
-    return name.slice(4) + ', The';
-  }
-  return name;
-};
 
 // Persistent cache for hero data using localStorage (survives tabs, sign-out, browser restart)
 const HERO_CACHE_PREFIX = 'hero_cache_';
@@ -55,8 +44,7 @@ const clearHeroCache = (key) => {
 const PPT_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
-  const bqClientName = normalizeBqName(clientName);
-  const cachedHero = getHeroCache(bqClientName);
+  const cachedHero = getHeroCache(clientName);
   const [activeTab, setActiveTab] = useState('summary');
   const [heroData, setHeroData] = useState(cachedHero);
   const [heroLoading, setHeroLoading] = useState(!cachedHero);
@@ -75,7 +63,7 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
     clearPortfolioCache();
     clearAgentsCache();
     clearUsageCache();
-    clearHeroCache(bqClientName);
+    clearHeroCache(clientName);
     // Reset DashboardContext state (also clears its sessionStorage cache)
     refreshAll();
     // Re-fetch hero
@@ -83,7 +71,7 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
     setHeroLoading(true);
     // Bump key to force re-mount all tabs & re-trigger loadAllTabs
     setRefreshKey(k => k + 1);
-  }, [refreshAll, bqClientName]);
+  }, [refreshAll, clientName]);
 
   const handleDownloadPpt = useCallback(async () => {
     setDownloadingPpt(true);
@@ -144,7 +132,7 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
     // Skip fetch if cached data is available
     const isRefresh = refreshKey > 0;
     if (!isRefresh) {
-    const cached = getHeroCache(bqClientName);
+    const cached = getHeroCache(clientName);
     if (cached) {
       setHeroData(cached);
       setHeroLoading(false);
@@ -155,10 +143,10 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
     let cancelled = false;
     const loadHero = async () => {
       try {
-         const raw = await fetchSection(bqClientName, 'hero', { noCache: isRefresh });
+         const raw = await fetchSection(clientName, 'hero', { noCache: isRefresh });
         if (!cancelled) {
           const transformed = transformHeroData(raw);
-          setHeroCache(bqClientName, transformed);
+          setHeroCache(clientName, transformed);
           setHeroData(transformed);
           setExternalTabData('hero', transformed);
         }
@@ -170,14 +158,14 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
     };
     loadHero();
     return () => { cancelled = true; };
-  }, [bqClientName, refreshKey]);
+  }, [clientName, refreshKey]);
 
   const tabComponents = {
     summary: <SummaryTab accountName={accountName} />,
-    snapshot: <SnapshotTab accountName={accountName} clientName={bqClientName} />,
-    portfolio: <PortfolioTab accountName={accountName} clientName={bqClientName} />,
-    aiagents: <AIAgentsTab accountName={accountName} clientName={bqClientName} />,
-    usage: <UsageTab accountName={accountName} clientName={bqClientName} />,
+    snapshot: <SnapshotTab accountName={accountName} clientName={clientName} />,
+    portfolio: <PortfolioTab accountName={accountName} clientName={clientName} />,
+    aiagents: <AIAgentsTab accountName={accountName} clientName={clientName} />,
+    usage: <UsageTab accountName={accountName} clientName={clientName} />,
     whitespace: <WhitespaceTab accountName={accountName} />,
     ubp: <UBPTab accountName={accountName} />,
     plan: <ActionPlanTab accountName={accountName} />,

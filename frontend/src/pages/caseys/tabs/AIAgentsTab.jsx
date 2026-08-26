@@ -249,7 +249,7 @@ const AIAgentsTab = ({ accountName, clientName }) => {
             const hasPlatformPlus = agents?.platform_plus ?? agents?.platformPlus ?? true;
             return (
           <div className="bg-[#EFF6FF] border border-[#93C5FD] border-l-[4px]  rounded-2xl px-6 pt-6 pb-4 mb-5 space-y-4">
-            <h3 className="text-[16px] font-bold italic text-[#4A3DC7] mb-2">Agent Studio — Platform Capabilities</h3>
+            <h3 className="text-[16px] font-bold italic text-[#4A3DC7] mb-2">Coupa Compose — Platform Capabilities</h3>
             <p className="text-[13px] text-[#374151] leading-relaxed mb-5">
               Based on <span className="font-bold text-[#4A3DC7]">{agents.client_name || customerName}</span>'s current entitlements ({hasPlatformPlus ? 'Platform Plus' : 'Platform SKU'}), elements of Compose can be accessed per the table below. Highlighted columns show capabilities included with your current SKU.
             </p>
