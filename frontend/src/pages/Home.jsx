@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchClients, toSlug } from '../services/clientsApi';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -15,9 +15,8 @@ const getInitials = (name) => {
 };
 
 const Home = () => {
-  const navigate = useNavigate();
+  const { logout } = useAuth();
   const userEmail = sessionStorage.getItem('userEmail') || '';
-  const { user, role, logout } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,6 +30,7 @@ const Home = () => {
         if (cancelled) return;
         const mapped = clients.map((client, idx) => ({
           id: toSlug(client.account_name),
+          key: `${toSlug(client.account_name)}-${client.SF_ACCT_ID || idx}`,
           name: client.account_name,
           accountName: client.account_name,
           initials: getInitials(client.account_name),
@@ -49,9 +49,11 @@ const Home = () => {
   }, []);
 
   // Filter accounts based on search
-  const ACCOUNTS = accounts.filter((account) =>
-    account.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredAccounts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return accounts;
+    return accounts.filter((account) => account.name.toLowerCase().includes(query));
+  }, [accounts, search]);
 
   const handleLogout = () => {
     logout();
@@ -108,7 +110,13 @@ const Home = () => {
         {/* Stats bar */}
         <div className="flex items-center gap-6 mb-8 text-sm">
           <span className="text-[#64748B]">
-            <span className="font-semibold text-[#0F172A]">{ACCOUNTS.length}</span> {ACCOUNTS.length === 1 ? 'account' : 'accounts'}
+            {loading ? (
+              <span className="font-semibold text-[#0F172A]">Loading accounts...</span>
+            ) : (
+              <>
+                <span className="font-semibold text-[#0F172A]">{filteredAccounts.length}</span> {filteredAccounts.length === 1 ? 'account' : 'accounts'}
+              </>
+            )}
           </span>
           {search && (
             <span className="text-[#94A3B8]">
@@ -133,14 +141,14 @@ const Home = () => {
           {error && (
             <div className="col-span-full bg-red-50 text-red-600 text-sm py-8 px-6 rounded-2xl text-center border border-red-100">{error}</div>
           )}
-          {!loading && !error && ACCOUNTS.length === 0 && (
+          {!loading && !error && filteredAccounts.length === 0 && (
             <div className="col-span-full text-[#94A3B8] text-sm py-12 text-center">
               {search ? 'No accounts match your search.' : 'No accounts available.'}
             </div>
           )}
-          {ACCOUNTS.map((account) => (
+          {filteredAccounts.map((account) => (
             <Link
-              key={account.id}
+              key={account.key}
               to={`/${account.id}`}
               state={{ accountName: account.accountName, clientName: account.name }}
               className="group bg-white rounded-2xl p-6 no-underline transition-all border border-gray-100 hover:border-[#0369A1]/25 hover:shadow-lg hover:shadow-[#0369A1]/[0.06] hover:-translate-y-0.5 flex flex-col"
