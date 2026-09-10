@@ -14,7 +14,6 @@ import {
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
 import TabLoader from '../../../components/TabLoader';
-import { getDailyCached, setDailyCached, clearCachedByPrefix } from '../../../services/cacheStorage';
 import { useDashboard } from '../../../context/DashboardContext';
 
 ChartJS.register(
@@ -71,15 +70,6 @@ const stackedSumPlugin = {
 ChartJS.register(stackedSumPlugin);
 
 const USAGE_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
-const USAGE_CACHE_KEY = 'tab_cache_usage_';
-
-const getUsageCached = (key) => getDailyCached(USAGE_CACHE_KEY + key);
-const setUsageCached = (key, data) => setDailyCached(USAGE_CACHE_KEY + key, data);
-
-export const clearUsageCache = () => {
-  clearCachedByPrefix(USAGE_CACHE_KEY);
-};
-
 const KPI_COLORS = {
   total_coupa_spend: '#0D652D',
   coupa_po_spend: '#4285F4',
@@ -117,9 +107,8 @@ const getKpi = (kpis, key) => kpis?.find(k => k.key === key) || null;
 
 const UsageTab = ({ accountName, clientName }) => {
   const customerName = clientName || accountName;
-  const cached = getUsageCached(customerName);
-  const [data, setData] = useState(cached);
-  const [loading, setLoading] = useState(!cached);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeView, setActiveView] = useState('trailing_twelve_months');
   const dashboard = useDashboard();
@@ -131,13 +120,6 @@ const UsageTab = ({ accountName, clientName }) => {
   const { setExternalTabData } = useDashboard();
 
   const fetchUsageData = useCallback(async () => {
-    const c = getUsageCached(customerName);
-    if (c) {
-      setData(c);
-      setLoading(false);
-      setExternalTabData('usage', c);
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
@@ -152,7 +134,6 @@ const UsageTab = ({ accountName, clientName }) => {
         throw new Error(`Failed to fetch Usage data (${response.status})`);
       }
       const result = await response.json();
-      setUsageCached(customerName, result);
       setExternalTabData('usage', result);
       setData(result);
     } catch (err) {

@@ -1,23 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TabLoader from '../../../components/TabLoader';
-import { getDailyCached, setDailyCached, clearCachedByPrefix } from '../../../services/cacheStorage';
 import { useDashboard } from '../../../context/DashboardContext';
 
 const CUSTOMER_VALUE_API = import.meta.env.VITE_API_BASE_URL || '/api';
-
-// Persistent cache using localStorage (survives tabs, sign-out, browser restart)
-const SNAPSHOT_CACHE_KEY = 'tab_cache_snapshot_';
-
-const getSnapshotCached = (key) => {
-  return getDailyCached(SNAPSHOT_CACHE_KEY + key);
-};
-const setSnapshotCached = (key, data) => {
-  setDailyCached(SNAPSHOT_CACHE_KEY + key, data);
-};
-
-export const clearSnapshotCache = () => {
-  clearCachedByPrefix(SNAPSHOT_CACHE_KEY);
-};
 
 const formatCurrency = (val) => {
   if (val === null || val === undefined || val === 'NA') return ' — ';
@@ -65,9 +50,8 @@ const formatPercent = (val) => {
 
 const SnapshotTab = ({ accountName, clientName }) => {
   const customerName = clientName || accountName;
-  const cached = getSnapshotCached(customerName);
-  const [data, setData] = useState(cached);
-  const [loading, setLoading] = useState(!cached);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const unmountedRef = useRef(false);
 
@@ -95,13 +79,6 @@ const SnapshotTab = ({ accountName, clientName }) => {
   const { setExternalTabData } = useDashboard();
 
   const fetchData = useCallback(async () => {
-    const c = getSnapshotCached(customerName);
-    if (c) {
-      setData(c);
-      setLoading(false);
-      setExternalTabData('snapshot', c);
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
@@ -112,7 +89,6 @@ const SnapshotTab = ({ accountName, clientName }) => {
       if (!response.ok) throw new Error(`Failed to fetch (${response.status})`);
       const result = await response.json();
       const sanitized = sanitizeData(result);
-      setSnapshotCached(customerName, sanitized);
       if (!unmountedRef.current) {
         setData(sanitized);
         setExternalTabData('snapshot', sanitized);
@@ -144,6 +120,14 @@ const SnapshotTab = ({ accountName, clientName }) => {
     <TabLoader loading={loading} error={error} onRetry={fetchData} data={data}>
       {data && (
         <div>
+          <div className="mb-6 flex items-start gap-2.5 text-[12px] text-[#3A4A8A] bg-linear-to-r from-[#EEF2FF] to-[#F5F8FF] border border-[#C7D5F7] border-l-4 border-l-[#4A3DC7] rounded-lg px-4 py-2.5">
+            <svg className="w-4 h-4 mt-0.5 shrink-0 text-[#4A3DC7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Harvest metrics are based on PFI reporting data. Results may vary from other systems (Analytics, Customer Dashboard, etc.). AI-generated content should be verified.</span>
+          </div>
+
+
           {/* Customer Strategic Initiatives */}
           {/* <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
@@ -243,7 +227,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
             <div className="flex items-center justify-between mb-4 pb-1.5 border-b-2 border-[#E4E7F1]">
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6180]">Section 2 · Value Metrics (KPIs)</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols md:grid-cols-1 lg:grid-cols-2 gap-2">
               {/* Sourcing */}
               
 
@@ -266,7 +250,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
               </div>
 
               {/* Invoicing */}
-              <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
+              {/* <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
                 <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
                 <div className="p-4">
                   <div className="text-[10px] uppercase tracking-wider text-[#2563EB] font-bold mb-3">Invoicing</div>
@@ -281,7 +265,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                     <div className="text-[11px] text-[#5A6180]">{data.First_Time_Match_Rate_text || ''}</div>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Additional */}
               <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
@@ -289,12 +273,13 @@ const SnapshotTab = ({ accountName, clientName }) => {
                 <div className="p-4">
                   <div className="text-[10px] uppercase tracking-wider text-[#7C3AED] font-bold mb-3">Contracts & Sourcing</div>
                   <div className="mb-3">
-                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Contracts</div>
+                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Contracts <span className="normal-case">(Includes active contracts)</span></div>
                     <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Contracts}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Contracts_text || ''}</div>
+
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Number of Sourcing Events</div>
+                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Number of Sourcing Events <span className="normal-case ">(Includes non-completed events)</span></div>
                     <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Sourcing_Projects}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Sourcing_Projects_text || ''}</div>
                   </div>
@@ -340,7 +325,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                     <div className="text-[10px] text-[#5A6180] mt-0.5">{data.VCard_On_Invoice_Volume_text || ''}</div>
                   </div>
                   <div>
-                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">VCard Volume</div>
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Virtual Card Volume</div>
                     <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.VCard_Volume)}</div>
                     <div className="text-[10px] text-[#5A6180] mt-0.5">{data.VCard_Volume_text || ''}</div>
                   </div>

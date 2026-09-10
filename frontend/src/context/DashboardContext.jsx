@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { fetchAllTabsInSession } from '../services/executiveSummaryApi';
-import { getDailyCached, setDailyCached, clearCachedByPrefix } from '../services/cacheStorage';
 import { generateSessionId, buildConsolidatedPayload, isPayloadComplete, sendConsolidatedData } from '../services/consolidatedDataApi';
 
 const DashboardContext = createContext(null);
@@ -10,32 +9,12 @@ const TAB_KEYS = ['whitespace', 'ubp'];
 // Module-level map to prevent duplicate fetches across StrictMode remounts
 const activeFetches = new Map();
 
-// Persistent cache using localStorage (survives tabs, sign-out, browser restart)
-const CACHE_KEY_PREFIX = 'dashboard_cache_';
-
-const getCache = (accountName) => {
-  return getDailyCached(CACHE_KEY_PREFIX + accountName);
-};
-
-const setCache = (accountName, data) => {
-  setDailyCached(CACHE_KEY_PREFIX + accountName, data);
-};
-
-export const clearDashboardCache = (accountName) => {
-  if (accountName) {
-    localStorage.removeItem(CACHE_KEY_PREFIX + accountName);
-  } else {
-    clearCachedByPrefix(CACHE_KEY_PREFIX);
-  }
-};
-
 export const DashboardProvider = ({ accountName, clientName, children }) => {
-  const cached = getCache(accountName);
-  const [tabData, setTabData] = useState(cached?.tabData || {});
+  const [tabData, setTabData] = useState({});
   const [tabLoading, setTabLoading] = useState({ summary: true, plan: true });
   const [tabErrors, setTabErrors] = useState({});
-  const [tabSessions, setTabSessions] = useState(cached?.tabSessions || {});
-  const fetchStartedRef = useRef(!!cached);
+  const [tabSessions, setTabSessions] = useState({});
+  const fetchStartedRef = useRef(false);
   const unmountedRef = useRef(false);
   const tabInFlightRef = useRef(new Set());
 
@@ -126,13 +105,6 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
     unmountedRef.current = false;
     return () => { unmountedRef.current = true; };
   }, []);
-
-  // Persist tabData to localStorage whenever it changes
-  useEffect(() => {
-    if (Object.keys(tabData).length > 0) {
-      setCache(accountName, { tabData, tabSessions });
-    }
-  }, [tabData, tabSessions, accountName]);
 
   const loadAllTabs = useCallback(async () => {
     if (fetchStartedRef.current) return;
@@ -263,8 +235,6 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
   }, [accountName, tabSessions, consolidatedPayload]);
 
   const refreshAll = useCallback(() => {
-    // Clear module-level cache for this account
-    clearDashboardCache(accountName);
     // New session ID for the fresh consolidated payload
     setConsolidatedSessionId(generateSessionId());
     insightsFetchedRef.current = false;

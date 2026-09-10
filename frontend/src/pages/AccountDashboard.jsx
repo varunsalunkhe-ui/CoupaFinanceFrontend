@@ -2,17 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import HeroSection from './caseys/HeroSection';
 import SummaryTab from './caseys/tabs/SummaryTab';
-import SnapshotTab, { clearSnapshotCache } from './caseys/tabs/SnapshotTab';
-import PortfolioTab, { clearPortfolioCache } from './caseys/tabs/PortfolioTab';
-import AIAgentsTab, { clearAgentsCache } from './caseys/tabs/AIAgentsTab';
-import UsageTab, { clearUsageCache } from './caseys/tabs/UsageTab';
+import SnapshotTab from './caseys/tabs/SnapshotTab';
+import PortfolioTab from './caseys/tabs/PortfolioTab';
+import AIAgentsTab from './caseys/tabs/AIAgentsTab';
+import UsageTab from './caseys/tabs/UsageTab';
 import WhitespaceTab from './caseys/tabs/WhitespaceTab';
 import UBPTab from './caseys/tabs/UBPTab';
 import ActionPlanTab from './caseys/tabs/ActionPlanTab';
 import { DashboardProvider, useDashboard } from '../context/DashboardContext';
 import { fetchSection, transformHeroData } from '../services/bigqueryApi';
 import { fetchClients, findClientBySlug } from '../services/clientsApi';
-import { getDailyCached, setDailyCached } from '../services/cacheStorage';
 
 const TABS = [
   { id: 'summary', label: 'Executive Summary' },
@@ -26,28 +25,12 @@ const TABS = [
 ];
 
 
-// Persistent cache for hero data using localStorage (survives tabs, sign-out, browser restart)
-const HERO_CACHE_PREFIX = 'hero_cache_';
-
-const getHeroCache = (key) => {
-  return getDailyCached(HERO_CACHE_PREFIX + key);
-};
-
-const setHeroCache = (key, data) => {
-  setDailyCached(HERO_CACHE_PREFIX + key, data);
-};
-
-const clearHeroCache = (key) => {
-  localStorage.removeItem(HERO_CACHE_PREFIX + key);
-};
-
 const PPT_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
-  const cachedHero = getHeroCache(clientName);
   const [activeTab, setActiveTab] = useState('summary');
-  const [heroData, setHeroData] = useState(cachedHero);
-  const [heroLoading, setHeroLoading] = useState(!cachedHero);
+  const [heroData, setHeroData] = useState(null);
+  const [heroLoading, setHeroLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [downloadingPpt, setDownloadingPpt] = useState(false);
   const { loadAllTabs, refreshAll, setExternalTabData } = useDashboard();
@@ -58,13 +41,6 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
   }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRefresh = useCallback(() => {
-    // Clear all caches (sessionStorage + module-level)
-    clearSnapshotCache();
-    clearPortfolioCache();
-    clearAgentsCache();
-    clearUsageCache();
-    clearHeroCache(clientName);
-    // Reset DashboardContext state (also clears its sessionStorage cache)
     refreshAll();
     // Re-fetch hero
     setHeroData(null);
@@ -129,24 +105,13 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
   };
 
   useEffect(() => {
-    // Skip fetch if cached data is available
     const isRefresh = refreshKey > 0;
-    if (!isRefresh) {
-    const cached = getHeroCache(clientName);
-    if (cached) {
-      setHeroData(cached);
-      setHeroLoading(false);
-      setExternalTabData('hero', cached);
-      return;
-    }
-  }
     let cancelled = false;
     const loadHero = async () => {
       try {
-         const raw = await fetchSection(clientName, 'hero', { noCache: isRefresh });
+         const raw = await fetchSection(clientName, 'hero', { noCache: true });
         if (!cancelled) {
           const transformed = transformHeroData(raw);
-          setHeroCache(clientName, transformed);
           setHeroData(transformed);
           setExternalTabData('hero', transformed);
         }
@@ -195,7 +160,7 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
           <div className="flex items-baseline justify-between mb-4 pb-2 border-b-2 border-[#E4E7F1]">
             <h2 className="text-xl font-bold text-[#0F1733]">Deep Dive</h2>
             <div className="flex items-center gap-2">
-              <button
+              {/* <button
                 onClick={handleDownloadPpt}
                 disabled={downloadingPpt}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
@@ -211,7 +176,7 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
                   </svg>
                 )}
                 {downloadingPpt ? 'Generating...' : 'Download Deck'}
-              </button>
+              </button> */}
 
               <button
                 onClick={() => window.open('https://vertexaisearch.cloud.google.com/us/home/cid/e0f17eb4-7f71-46db-9249-ea739ee10e2f/r/agent/8365950098131666619/session/-?hl=en_US&_gl=1*ua8eue*_ga*MTE1MDk5MjkzMS4xNzc5MTE2Nzg2*_ga_WH2QY8WWF5*czE3ODY5NDk5MzkkbzI4OCRnMSR0MTc4Njk1MDAxNiRqNDUkbDAkaDA', '_blank', 'noopener,noreferrer')}
@@ -223,7 +188,7 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
                 GTM Sales Buddy
               </button>
 
-              <button
+              {/* <button
                 onClick={handleRefresh}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer"
               >
@@ -231,7 +196,7 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Refresh
-              </button>
+              </button> */}
             </div>
           </div>
 

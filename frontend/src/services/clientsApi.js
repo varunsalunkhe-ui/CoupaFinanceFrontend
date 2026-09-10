@@ -1,9 +1,6 @@
 import axios from 'axios';
-import { getDailyCached, setDailyCached } from './cacheStorage';
 
 const CLIENTS_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-const CLIENTS_CACHE_KEY = 'clients_cache';
-
 let inFlightClientsRequest = null;
 
 const normalizeClients = (payload) => {
@@ -29,13 +26,6 @@ export const fetchClients = async (options = {}) => {
     ? { retries: options, forceRefresh: false }
     : { retries: 2, forceRefresh: false, ...options };
 
-  if (!config.forceRefresh) {
-    const cachedClients = getDailyCached(CLIENTS_CACHE_KEY);
-    if (Array.isArray(cachedClients)) {
-      return cachedClients;
-    }
-  }
-
   if (inFlightClientsRequest) {
     return inFlightClientsRequest;
   }
@@ -49,7 +39,6 @@ export const fetchClients = async (options = {}) => {
         });
 
         const normalizedClients = normalizeClients(response.data);
-        setDailyCached(CLIENTS_CACHE_KEY, normalizedClients);
         return normalizedClients;
       } catch (err) {
         if (attempt === config.retries) {

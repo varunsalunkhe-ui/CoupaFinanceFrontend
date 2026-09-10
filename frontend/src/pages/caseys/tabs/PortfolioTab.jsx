@@ -1,23 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TabLoader from '../../../components/TabLoader';
-import { getDailyCached, setDailyCached, clearCachedByPrefix } from '../../../services/cacheStorage';
 import { useDashboard } from '../../../context/DashboardContext';
 
 const PORTFOLIO_API = import.meta.env.VITE_API_BASE_URL || '/api';
-
-// Persistent cache using localStorage (survives tabs, sign-out, browser restart)
-const PORTFOLIO_CACHE_KEY = 'tab_cache_portfolio_';
-
-const getPortfolioCached = (key) => {
-  return getDailyCached(PORTFOLIO_CACHE_KEY + key);
-};
-const setPortfolioCached = (key, data) => {
-  setDailyCached(PORTFOLIO_CACHE_KEY + key, data);
-};
-
-export const clearPortfolioCache = () => {
-  clearCachedByPrefix(PORTFOLIO_CACHE_KEY);
-};
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '';
@@ -27,8 +12,7 @@ const formatDate = (dateStr) => {
 
 const formatQuantity = (qty) => {
   if (!qty) return '';
-  if (qty >= 1000) return `${(qty / 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
-  return qty.toLocaleString();
+  return Number(qty).toLocaleString('en-US');
 };
 
 // ═══ Heatmap Configuration ═══
@@ -122,9 +106,8 @@ const buildHeatmapData = (heatmap) => {
 
 const PortfolioTab = ({ accountName, clientName }) => {
   const customerName = clientName || accountName;
-  const cached = getPortfolioCached(customerName);
-  const [data, setData] = useState(cached);
-  const [loading, setLoading] = useState(!cached);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const unmountedRef = useRef(false);
   const { setExternalTabData } = useDashboard();
@@ -135,13 +118,6 @@ const PortfolioTab = ({ accountName, clientName }) => {
   }, []);
 
   const fetchData = useCallback(async () => {
-    const c = getPortfolioCached(customerName);
-    if (c) {
-      setData(c);
-      setLoading(false);
-      setExternalTabData('portfolio', c);
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
@@ -152,7 +128,6 @@ const PortfolioTab = ({ accountName, clientName }) => {
       );
       if (!response.ok) throw new Error(`Failed to fetch (${response.status})`);
       const result = await response.json();
-      setPortfolioCached(customerName, result);
       if (!unmountedRef.current) {
         setData(result);
         setExternalTabData('portfolio', result);
