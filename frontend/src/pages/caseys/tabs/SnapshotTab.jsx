@@ -227,7 +227,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
             <div className="flex items-center justify-between mb-4 pb-1.5 border-b-2 border-[#E4E7F1]">
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6180]">Section 2 · Value Metrics (KPIs)</h3>
             </div>
-            <div className="grid grid-cols md:grid-cols-1 lg:grid-cols-2 gap-2">
+            <div className="grid grid-cols md:grid-cols-2 lg:grid-cols-3 gap-3">
               {/* Sourcing */}
               
 
@@ -250,22 +250,22 @@ const SnapshotTab = ({ accountName, clientName }) => {
               </div>
 
               {/* Invoicing */}
-              {/* <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
+              <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
                 <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
                 <div className="p-4">
                   <div className="text-[10px] uppercase tracking-wider text-[#2563EB] font-bold mb-3">Invoicing</div>
-                  <div className="mb-3">
+                  {/* <div className="mb-3">
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Invoice Processing Cycle</div>
                     <div className="text-2xl font-bold text-[#0F1733]">{formatDays(data.Invoice_Processing_Cycle)}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Invoice_Processing_Cycle_text || ''}</div>
-                  </div>
+                  </div> */}
                   <div>
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">First Time Match Rate</div>
                     <div className="text-2xl font-bold text-[#0F1733]">{formatPercent(data.First_Time_Match_Rate)}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.First_Time_Match_Rate_text || ''}</div>
                   </div>
                 </div>
-              </div> */}
+              </div>
 
               {/* Additional */}
               <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
