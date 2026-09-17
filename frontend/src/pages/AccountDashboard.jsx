@@ -33,7 +33,7 @@ const TABS = [
   },
   {
     id: 'aiagents',
-    label: 'AI Agents',
+    label: 'Navi Agents & GenAI Features',
     description: "Coupa's full AI agent catalog to the agents relevant to a customer, based on the products they own can be found here. Each card shows the agent's name, product alignment, rollout stage, and access status. Use this tab when positioning Compose, AI-first packages, or downloading an offline report.",
   },
   {

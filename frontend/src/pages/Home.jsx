@@ -1,8 +1,10 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchClients, toSlug } from '../services/clientsApi';
 import { useAuth } from '../context/AuthContext.jsx';
 import HelpGuideModal from '../components/HelpGuideModal';
+
+const SERVICE_NOW_URL = 'https://deloitte.service-now.com';
 
 const COLORS = ['#0369A1', '#0891B2', '#0D9488', '#059669', '#4F46E5', '#7C3AED'];
 
@@ -23,6 +25,20 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [helpGuideOpen, setHelpGuideOpen] = useState(false);
+  const [accountHelpOpen, setAccountHelpOpen] = useState(false);
+  const accountHelpRef = useRef(null);
+
+  // Close the "Can't find your account?" popover on outside click
+  useEffect(() => {
+    if (!accountHelpOpen) return;
+    const handleClickOutside = (e) => {
+      if (accountHelpRef.current && !accountHelpRef.current.contains(e.target)) {
+        setAccountHelpOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [accountHelpOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +96,53 @@ const Home = () => {
               </svg>
               Help & FAQ Guide
             </button>
+            <div className="relative" ref={accountHelpRef}>
+              <button
+                onClick={() => setAccountHelpOpen((v) => !v)}
+                aria-label="Can't find your account?"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-[#94A3B8] hover:text-[#0369A1] hover:bg-[#0369A1]/10 cursor-pointer transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.09 9a3 3 0 015.83 1c0 2-3 2-3 4M12 17h.01" />
+                </svg>
+              </button>
+              {accountHelpOpen && (
+                <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-xl shadow-2xl p-5 z-50">
+                  <div className="flex items-start justify-between mb-3">
+                    <h4 className="font-semibold text-slate-900 text-sm flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4M12 8h.01" />
+                      </svg>
+                      Can't find your account?
+                    </h4>
+                    <button onClick={() => setAccountHelpOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                    This development environment currently contains a pre-selected subset of production accounts (~168 total in production, {accounts.length} loaded here in dev).
+                  </p>
+                  <div className="border-t border-slate-100 pt-3">
+                    <p className="text-[11px] text-slate-400 mb-2">Need access to Nike, Puma, Microsoft or others?</p>
+                    <a
+                      href={SERVICE_NOW_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm no-underline"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      Request Access in ServiceNow
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
             <span className="text-sm text-[#64748B] hidden sm:inline">{userEmail}</span>
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0369A1] to-[#0891B2] flex items-center justify-center text-white text-xs font-bold shadow-sm">
               {userEmail ? userEmail[0].toUpperCase() : 'U'}
@@ -154,8 +217,34 @@ const Home = () => {
             <div className="col-span-full bg-red-50 text-red-600 text-sm py-8 px-6 rounded-2xl text-center border border-red-100">{error}</div>
           )}
           {!loading && !error && filteredAccounts.length === 0 && (
-            <div className="col-span-full text-[#94A3B8] text-sm py-12 text-center">
-              {search ? 'No accounts match your search.' : 'No accounts available.'}
+            <div className="col-span-full flex flex-col items-center text-center py-14 px-6">
+              <div className="w-14 h-14 rounded-full bg-[#0369A1]/10 flex items-center justify-center mb-5">
+                <svg className="w-6 h-6 text-[#0369A1]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+                </svg>
+              </div>
+              <h3 className="text-base font-semibold text-[#0F172A] mb-1.5">
+                {search ? 'No matching accounts found' : 'No accounts available'}
+              </h3>
+              <p className="text-[13px] text-[#94A3B8] max-w-sm mb-6">
+                {search
+                  ? "We couldn't find any account in dev matching your search/filtering settings. Production supports ~168 accounts."
+                  : 'No accounts are currently available for your user.'}
+              </p>
+              <div className="bg-[#F8FAFC] border border-gray-100 rounded-xl px-6 py-5 w-full max-w-sm">
+                <p className="text-xs text-[#64748B] mb-3">Need to review a customer that isn't listed?</p>
+                <a
+                  href={SERVICE_NOW_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm no-underline"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  Request Account Access in ServiceNow
+                </a>
+              </div>
             </div>
           )}
           {filteredAccounts.map((account) => (
