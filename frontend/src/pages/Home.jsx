@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchClients, toSlug } from '../services/clientsApi';
 import { useAuth } from '../context/AuthContext.jsx';
+import HelpGuideModal from '../components/HelpGuideModal';
 
 const COLORS = ['#0369A1', '#0891B2', '#0D9488', '#059669', '#4F46E5', '#7C3AED'];
 
@@ -21,6 +22,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [helpGuideOpen, setHelpGuideOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,6 +71,15 @@ const Home = () => {
             <span className="text-[#0F172A] text-lg font-bold tracking-tight">Coupa Finance</span>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setHelpGuideOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+              </svg>
+              Help & FAQ Guide
+            </button>
             <span className="text-sm text-[#64748B] hidden sm:inline">{userEmail}</span>
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0369A1] to-[#0891B2] flex items-center justify-center text-white text-xs font-bold shadow-sm">
               {userEmail ? userEmail[0].toUpperCase() : 'U'}
@@ -82,6 +93,7 @@ const Home = () => {
           </div>
         </div>
       </header>
+      <HelpGuideModal open={helpGuideOpen} onClose={() => setHelpGuideOpen(false)} />
 
       {/* Subheader with title + search */}
       <div className="border-b border-gray-100 bg-white">

@@ -12,16 +12,50 @@ import ActionPlanTab from './caseys/tabs/ActionPlanTab';
 import { DashboardProvider, useDashboard } from '../context/DashboardContext';
 import { fetchSection, transformHeroData } from '../services/bigqueryApi';
 import { fetchClients, findClientBySlug } from '../services/clientsApi';
+import InfoTooltip from '../components/InfoTooltip';
+import HelpGuideModal from '../components/HelpGuideModal';
 
 const TABS = [
-  { id: 'summary', label: 'Executive Summary' },
-  { id: 'snapshot', label: 'Value Snapshot' },
-  { id: 'portfolio', label: 'Product Portfolio' },
-  { id: 'aiagents', label: 'AI Agents' },
-  { id: 'usage', label: 'Usage Over Time' },
-  { id: 'whitespace', label: 'Whitespace & Risks' },
-  { id: 'ubp', label: 'UBP Conversion' },
-  { id: 'plan', label: 'Action Plan' },
+  {
+    id: 'summary',
+    label: 'Executive Summary',
+    description: 'A one-page account health overview providing details on — relationship health, Customer Value Management rating, key concerns, adoption wins, and top expansion priorities. The content is AI-generated from the underlying data, reflecting what is happening in the account, not a manual narrative. Use this to align with your manager on account strategy before a customer meeting.',
+  },
+  {
+    id: 'snapshot',
+    label: 'Value Snapshot',
+    description: 'The dollar value the customer is realizing from each product, calculated from platform volumes — invoice spend, sourcing savings, and payment rebates. At the bottom of the tab is a value realization calculation that shows the estimated value the customer is getting relative to what they are paying. Use this to speak about business impact or to build the case for a Usage Based Pricing (UBP) conversion.',
+  },
+  {
+    id: 'portfolio',
+    label: 'Product Portfolio',
+    description: "A full picture of every product the customer owns, color-coded by adoption and health. Divided into: healthy/active use (green), owned but underused/at risk (yellow/red), and unowned expansion opportunities. Use this to decide where to focus: Is this a save play or a growth play?",
+  },
+  {
+    id: 'aiagents',
+    label: 'AI Agents',
+    description: "Coupa's full AI agent catalog to the agents relevant to a customer, based on the products they own can be found here. Each card shows the agent's name, product alignment, rollout stage, and access status. Use this tab when positioning Compose, AI-first packages, or downloading an offline report.",
+  },
+  {
+    id: 'usage',
+    label: 'Usage Over Time',
+    description: "A trend-based tab designed to show key platform metrics. Use this tab to analyze how these metrics have changed over time — monthly and yearly, across the customer's products.",
+  },
+  {
+    id: 'whitespace',
+    label: 'Whitespace & Risks',
+    description: 'Expansion opportunities and risk signals displayed side by side. Opportunities come from open Salesforce deals and whitespace analysis; risks come from adoption gaps, low usage, and renewal signals. Treat output as directional.',
+  },
+  {
+    id: 'ubp',
+    label: 'UBP Conversion',
+    description: 'A directional calculation showing what a usage-based pricing conversion would look like. Places the customer into one of seven programs based on spend tier and applies a basis point calculation to estimate switching value.',
+  },
+  {
+    id: 'plan',
+    label: 'Action Plan',
+    description: 'Recommended next steps for the rep, synthesized from everything the dashboard surfaces across the other eight tabs. AI-generated bridge between dashboard intelligence and your actual account execution plan.',
+  },
 ];
 
 
@@ -33,6 +67,7 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
   const [heroLoading, setHeroLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [downloadingPpt, setDownloadingPpt] = useState(false);
+  const [helpGuideOpen, setHelpGuideOpen] = useState(false);
   const { loadAllTabs, refreshAll, setExternalTabData } = useDashboard();
 
 
@@ -145,9 +180,19 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
         </Link>
         <nav className="flex gap-4 text-sm items-center">
           <Link to="/" className="text-[#64748B] no-underline hover:text-[#0369A1] font-medium transition-colors">Home</Link>
+          <button
+            onClick={() => setHelpGuideOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+            Help & FAQ Guide
+          </button>
           <span className="text-[#0369A1] font-semibold">{displayName}</span>
         </nav>
       </header>
+      <HelpGuideModal open={helpGuideOpen} onClose={() => setHelpGuideOpen(false)} />
 
       <div className="max-w-[1400px] mx-auto p-6">
         {heroLoading ? (
@@ -160,7 +205,7 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
           <div className="flex items-baseline justify-between mb-4 pb-2 border-b-2 border-[#E4E7F1]">
             <h2 className="text-xl font-bold text-[#0F1733]">Deep Dive</h2>
             <div className="flex items-center gap-2">
-              {/* <button
+              <button
                 onClick={handleDownloadPpt}
                 disabled={downloadingPpt}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
@@ -176,7 +221,7 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
                   </svg>
                 )}
                 {downloadingPpt ? 'Generating...' : 'Download Deck'}
-              </button> */}
+              </button>
 
               <button
                 onClick={() => window.open('https://vertexaisearch.cloud.google.com/us/home/cid/e0f17eb4-7f71-46db-9249-ea739ee10e2f/r/agent/8365950098131666619/session/-?hl=en_US&_gl=1*ua8eue*_ga*MTE1MDk5MjkzMS4xNzc5MTE2Nzg2*_ga_WH2QY8WWF5*czE3ODY5NDk5MzkkbzI4OCRnMSR0MTc4Njk1MDAxNiRqNDUkbDAkaDA', '_blank', 'noopener,noreferrer')}
@@ -205,13 +250,14 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`px-4 py-2.5 border-b-2 font-semibold text-sm whitespace-nowrap transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-4 py-2.5 border-b-2 font-semibold text-sm whitespace-nowrap transition-all cursor-pointer ${
                   activeTab === tab.id
                     ? 'text-[#0369A1] border-[#0369A1]'
                     : 'text-[#5A6180] border-transparent hover:text-[#0369A1]'
                 }`}
               >
                 {tab.label}
+                <InfoTooltip text={tab.description} />
               </button>
             ))}
           </div>
