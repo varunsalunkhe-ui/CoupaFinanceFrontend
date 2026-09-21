@@ -9,6 +9,7 @@ import LoginCallbackPage from './components/LoginCallback';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import AccountDashboard from './pages/AccountDashboard';
+import AccountFileManager from './pages/AccountFileManager.jsx';
 
 const oktaAuth = new OktaAuth(oktaConfig);
 
@@ -49,6 +50,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute >
             <AccountDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/:accountId/files',
+        element: (
+          <ProtectedRoute>
+            <AccountFileManager />
           </ProtectedRoute>
         ),
       },

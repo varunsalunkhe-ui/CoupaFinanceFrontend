@@ -43,7 +43,7 @@ const ActionPlanTab = ({ accountName = 'caseys' }) => {
                 <tr className="bg-[#F8F9FD]">
                   <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#5A6180] w-20">Priority</th>
                   <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#5A6180]">Action</th>
-                  <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#5A6180]">Owner</th>
+                  {/* <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#5A6180]">Owner</th> */}
                   <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#5A6180]">Impact</th>
                   <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#5A6180] w-24">Source</th>
                 </tr>
@@ -59,7 +59,7 @@ const ActionPlanTab = ({ accountName = 'caseys' }) => {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-[#0F1733]">{row.action || row.title}</td>
-                      <td className="px-4 py-3 text-sm text-[#5A6180]">{row.owner || '—'}</td>
+                      {/* <td className="px-4 py-3 text-sm text-[#5A6180]">{row.owner || '—'}</td> */}
                       <td className="px-4 py-3 text-sm text-[#5A6180]">{row.impact || row.expectedOutcome || '—'}</td>
                       <td className="px-4 py-3 text-xs text-[#5A6180]">{row.due || row.source || row.timeline || '—'}</td>
                     </tr>

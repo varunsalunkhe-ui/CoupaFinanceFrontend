@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useParams, useLocation } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import HeroSection from './caseys/HeroSection';
 import SummaryTab from './caseys/tabs/SummaryTab';
 import SnapshotTab from './caseys/tabs/SnapshotTab';
@@ -14,6 +14,7 @@ import { fetchSection, transformHeroData } from '../services/bigqueryApi';
 import { fetchClients, findClientBySlug } from '../services/clientsApi';
 import InfoTooltip from '../components/InfoTooltip';
 import HelpGuideModal from '../components/HelpGuideModal';
+import { buildFullDashboardReportHtml, downloadHtmlFile } from '../services/dashboardReportBuilder';
 
 const TABS = [
   {
@@ -61,14 +62,15 @@ const TABS = [
 
 const PPT_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
-const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
+const AccountDashboardInner = ({ accountId, accountName, clientName, displayName }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('summary');
   const [heroData, setHeroData] = useState(null);
   const [heroLoading, setHeroLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [downloadingPpt, setDownloadingPpt] = useState(false);
   const [helpGuideOpen, setHelpGuideOpen] = useState(false);
-  const { loadAllTabs, refreshAll, setExternalTabData } = useDashboard();
+  const { tabData, externalData, loadAllTabs, refreshAll, setExternalTabData } = useDashboard();
 
 
   useEffect(() => {
@@ -139,6 +141,22 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
     setActiveTab(tabId);
   };
 
+  const handleDownloadDashboard = useCallback(() => {
+    const html = buildFullDashboardReportHtml({
+      customerName: clientName,
+      hero: heroData,
+      summary: tabData.summary,
+      snapshot: externalData.snapshot,
+      portfolio: externalData.portfolio,
+      aiAgents: externalData.aiAgents,
+      usage: externalData.usage,
+      whitespace: tabData.whitespace,
+      ubp: tabData.ubp,
+      plan: tabData.plan,
+    });
+    downloadHtmlFile(html, `Dashboard_Report_${clientName.replace(/[^a-zA-Z0-9]/g, '_')}.html`);
+  }, [clientName, heroData, tabData, externalData]);
+
   useEffect(() => {
     const isRefresh = refreshKey > 0;
     let cancelled = false;
@@ -203,7 +221,24 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
 
         <section className="mb-8">
           <div className="flex items-baseline justify-between mb-4 pb-2 border-b-2 border-[#E4E7F1]">
-            <h2 className="text-xl font-bold text-[#0F1733]">Deep Dive</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-[#0F1733]">Deep Dive</h2>
+              <div className="relative group">
+                <button
+                  onClick={handleDownloadDashboard}
+                  aria-label="Download Dashboard"
+                  className="flex items-center justify-center w-7 h-7 rounded-lg text-[#0369A1] bg-[#0369A1]/10 hover:bg-[#0369A1]/20 transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
+                  </svg>
+                </button>
+                <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 whitespace-nowrap rounded-md bg-[#0F1733] px-2.5 py-1.5 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  Download Dashboard
+                </span>
+              </div>
+            </div>
+            
             <div className="flex items-center gap-2">
               <button
                 onClick={handleDownloadPpt}
@@ -231,6 +266,16 @@ const AccountDashboardInner = ({ accountName, clientName, displayName }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h6v6m0 0L9 21l-4-4L19 3z" />
                 </svg>
                 GTM Sales Buddy
+              </button>
+
+              <button
+                onClick={() => navigate(`/${accountId}/files`, { state: { accountName, clientName } })}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer shadow-sm"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Manage Account Plan
               </button>
 
               {/* <button
@@ -334,6 +379,7 @@ const AccountDashboard = () => {
   return (
     <DashboardProvider accountName={clientInfo.accountName} clientName={clientInfo.clientName}>
       <AccountDashboardInner
+        accountId={accountId}
         accountName={clientInfo.accountName}
         clientName={clientInfo.clientName}
         displayName={clientInfo.clientName}

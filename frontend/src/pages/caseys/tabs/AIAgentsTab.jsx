@@ -4,107 +4,6 @@ import { useDashboard } from '../../../context/DashboardContext';
 
 const AI_AGENTS_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
-const downloadAsHtml = (agents, customerName) => {
-  const summary = agents?.summary;
-  const categories = agents?.categories || [];
-  const unlockedPct = summary?.total_agents > 0
-    ? Math.round((summary.customer_accessible / summary.total_agents) * 100)
-    : 0;
-
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AI Agents Report - ${customerName}</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #F6F7FB; color: #111827; padding: 32px; line-height: 1.5; }
-  .header { text-align: center; margin-bottom: 32px; }
-  .header h1 { font-size: 24px; color: #0F1733; }
-  .header p { font-size: 13px; color: #6B7280; margin-top: 4px; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
-  .stat-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 20px; position: relative; overflow: hidden; }
-  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(to right, #6353E9, #00B8D9); }
-  .stat-label { font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 4px; margin-top: 4px; }
-  .stat-value { font-size: 32px; font-weight: 700; color: #111827; }
-  .stat-sub { font-size: 12px; color: #6B7280; margin-top: 8px; }
-  .category { margin-bottom: 32px; }
-  .category h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #4A3DC7; margin-bottom: 12px; }
-  .category-divider { border: none; border-bottom: 1px solid #E5E7EB; margin-bottom: 12px; }
-  .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .agent-card { border-radius: 12px; padding: 12px; display: flex; flex-direction: column; }
-  .agent-card.accessible { background: #EEF2FF; border: 1px solid #C7D2FE; border-left: 4px solid #6353E9; }
-  .agent-card.locked { background: #F9FAFB; border: 1px solid #E5E7EB; border-left: 4px solid #E5E7EB; }
-  .agent-name { font-size: 13px; font-weight: 600; }
-  .agent-name.accessible { color: #4338CA; }
-  .agent-name.locked { color: #1E293B; }
-  .badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.05em; }
-  .badge-act { background: #BBF7D0; color: #000; }
-  .badge-assist { background: #D1D5DB; color: #000; }
-  .badge-advise { background: #BFDBFE; color: #000; }
-  .badge-status { background: #E5E7EB; color: #000; }
-  .agent-desc { font-size: 11px; color: #5A6180; margin-top: 8px; }
-  .agent-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 8px; border-top: 1px dashed #D1D5DB; }
-  .pill-accessible { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #6353E9; color: #fff; }
-  .pill-locked { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #F1F5F9; color: #64748B; border: 1px solid #E2E8F0; }
-  .access-yes { font-size: 11px; font-weight: 500; color: #059669; }
-  .access-no { font-size: 11px; font-weight: 500; color: #6B7280; }
-  .studio { background: #DBEAFE; border: 1px solid #93C5FD; border-radius: 16px; padding: 20px 24px; margin-bottom: 28px; }
-  .studio h3 { font-size: 15px; font-weight: 700; color: #4A3DC7; margin-bottom: 4px; }
-  .studio p { font-size: 13px; color: #374151; }
-  .footer { text-align: center; font-size: 11px; color: #9CA3AF; margin-top: 40px; padding-top: 16px; border-top: 1px solid #E5E7EB; }
-</style>
-</head>
-<body>
-<div class="header">
-  <h1>AI Agents Report</h1>
-  <p>${customerName} &mdash; Generated ${new Date().toLocaleDateString()}</p>
-</div>
-
-${summary ? `<div class="stats">
-  <div class="stat-card"><div class="stat-label">Total Agents</div><div class="stat-value">${summary.total_agents}</div><div class="stat-sub">R43-R47 cumulative</div></div>
-  <div class="stat-card"><div class="stat-label">Customer Accessible</div><div class="stat-value">${summary.customer_accessible}</div><div class="stat-sub">${unlockedPct}% unlocked</div></div>
-  <div class="stat-card"><div class="stat-label">Currently Active</div><div class="stat-value">${summary.currently_active}</div><div class="stat-sub">Awaiting telemetry</div></div>
-  <div class="stat-card"><div class="stat-label">Volume (12 Mo)</div><div class="stat-value">${summary.volume_12_mo}</div><div class="stat-sub">Awaiting telemetry</div></div>
-</div>` : ''}
-
-${agents.agent_studio ? `<div class="studio"><h3>Agent Studio — Build Custom Agents</h3><p><strong>Coupa Compose</strong> — ${agents.agent_studio.description}</p></div>` : ''}
-
-${categories.map(cat => `<div class="category">
-  <h3>${cat.name}</h3>
-  <hr class="category-divider"/>
-  <div class="agents-grid">
-    ${cat.agents.map(agent => `<div class="agent-card ${agent.accessible ? 'accessible' : 'locked'}">
-      <div style="display:flex;align-items:start;justify-content:space-between;gap:8px;">
-        <span class="agent-name ${agent.accessible ? 'accessible' : 'locked'}">${agent.name}</span>
-        <span class="badge badge-status">${agent.status || 'GA'}</span>
-      </div>
-      ${agent.designation ? `<div style="margin-top:6px;"><span class="badge badge-${agent.designation.toLowerCase()}">${agent.designation}</span></div>` : ''}
-      ${agent.description ? `<p class="agent-desc">${agent.description}</p>` : ''}
-      <div class="agent-bottom">
-        <span class="${agent.accessible ? 'pill-accessible' : 'pill-locked'}">${agent.release || 'Base'}</span>
-        <span class="${agent.accessible ? 'access-yes' : 'access-no'}">${agent.accessible ? '✓ Accessible' : '🔒 ' + (agent.access_status || 'Requires SKU')}</span>
-      </div>
-    </div>`).join('')}
-  </div>
-</div>`).join('')}
-
-<div class="footer">Coupa Finance &mdash; AI-Driven Knowledge Platform</div>
-</body>
-</html>`;
-
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `AI_Agents_${customerName.replace(/[^a-zA-Z0-9]/g, '_')}.html`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
-
 const AIAgentsTab = ({ accountName, clientName }) => {
   const customerName = clientName || accountName;
   const [data, setData] = useState(null);
@@ -150,19 +49,6 @@ const AIAgentsTab = ({ accountName, clientName }) => {
     <TabLoader loading={loading} error={error} onRetry={fetchAgentAccess} data={data}>
       {agents && (
         <div>
-          {/* ─── Download Button ─── */}
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => downloadAsHtml(agents, customerName)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer shadow-sm"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
-              </svg>
-              Download Report
-            </button>
-          </div>
-
           {/* ─── Description + Legend Row ─── */}
           <p className="text-[13px] text-[#374151] mb-5 leading-[1.7]">
             AI Agents available for {agents.client_name}. Filled cards = agents the customer can access today based on their portfolio. Outlined cards = agents unlocked by adding the indicated SKU.

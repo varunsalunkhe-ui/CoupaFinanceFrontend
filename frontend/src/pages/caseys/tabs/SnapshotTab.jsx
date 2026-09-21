@@ -153,7 +153,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
           {/* Section 1 · Spend Data */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4 pb-1.5 border-b-2 border-[#E4E7F1]">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6180]">Section 1 · Spend Data</h3>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6180]">Section 1 - UBP Measured Spend Data</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-4">
               <div className="bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
@@ -177,7 +177,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                   background: 'linear-gradient(155deg, #1e3a8a 0%, #0f172a 100%)',
                 }}
               >
-                <div className="text-[12px] uppercase tracking-[0.03em] text-[#B9CBEF] font-bold mb-2">Total Coupa Spend</div>
+                <div className="text-[12px] uppercase tracking-[0.03em] text-[#B9CBEF] font-bold mb-2">Composition of Total UBP Measured Spend</div>
                 <div className="text-[32px] font-black mt-2.5 text-white" style={{ fontFamily: "'Manrope', sans-serif" }}>{formatCurrency(data.total_coupa_spend)}</div>
                 <div className="text-[11.5px] text-[#CFDDF6] mt-2 font-medium">{'Coupa PO Spend + Non-PO Invoice Spend + External PO-based Invoice Spend'}</div>
               </div>
@@ -191,7 +191,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
             {/* Capture Rate Bar */}
             <div className="bg-white border border-[#E4E7F1] rounded-lg p-5">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[14px] font-semibold text-[#0F1733]">Composition of Total Coupa Spend</span>
+                <span className="text-[14px] font-semibold text-[#0F1733]">Composition of Total UBP Measured Spend</span>
                 <span className="text-[14px] leading-none font-extrabold text-[#0F1733]">{formatCurrencyFull(totalCoupaSpend, data.total_coupa_spend)}</span>
               </div>
               <div className="w-full h-9 bg-[#E4E7F1] rounded-xl overflow-hidden flex">

@@ -251,7 +251,7 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
     <DashboardContext.Provider value={{
       tabData, tabLoading, tabErrors, tabSessions,
       loadAllTabs, fetchTab, retryTab, refreshAll,
-      setExternalTabData, consolidatedPayload, consolidatedSessionId,
+      setExternalTabData, externalData, consolidatedPayload, consolidatedSessionId,
     }}>
       {children}
     </DashboardContext.Provider>
