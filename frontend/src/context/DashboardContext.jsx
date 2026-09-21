@@ -18,7 +18,7 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
   const unmountedRef = useRef(false);
   const tabInFlightRef = useRef(new Set());
 
-  // ── Consolidated Data (Hero + 6 tabs, excl. Executive Summary & Action Plan) ──
+  // ── Consolidated Data (Hero + 4 tabs, excl. Executive Summary & Action Plan) ──
   const [consolidatedSessionId, setConsolidatedSessionId] = useState(() => generateSessionId());
   const [externalData, setExternalData] = useState({});
   const insightsFetchedRef = useRef(false);
@@ -41,9 +41,7 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
     portfolio: externalData.portfolio || null,
     aiAgents: externalData.aiAgents || null,
     usage: externalData.usage || null,
-    whitespace: tabData.whitespace || null,
-    ubp: tabData.ubp || null,
-  }), [externalData, tabData]);
+  }), [externalData]);
 
   /** Full consolidated payload — null until every section is populated. */
   const consolidatedPayload = useMemo(() => {
@@ -58,10 +56,10 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
 
   // Debug: log which consolidated sections are still missing
   useEffect(() => {
-    const keys = ['hero', 'snapshot', 'portfolio', 'aiAgents', 'usage', 'whitespace', 'ubp'];
+    const keys = ['hero', 'snapshot', 'portfolio', 'aiAgents', 'usage'];
     const present = keys.filter(k => consolidatedSections[k] != null);
     const missing = keys.filter(k => consolidatedSections[k] == null);
-    console.log(`[Consolidated] ${present.length}/7 sections ready. Present: [${present}] Missing: [${missing}]`);
+    console.log(`[Consolidated] ${present.length}/5 sections ready. Present: [${present}] Missing: [${missing}]`);
   }, [consolidatedSections]);
 
   // When consolidated payload is ready, call backend to generate Executive Summary & Action Plan

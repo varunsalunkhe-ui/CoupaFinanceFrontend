@@ -1,8 +1,8 @@
 /**
  * Consolidated Data API Service
  *
- * Builds a single JSON payload combining Hero Section + 6 tab data
- * (Snapshot, Portfolio, AI Agents, Usage, Whitespace, UBP).
+ * Builds a single JSON payload combining Hero Section + 4 tab data
+ * (Snapshot, Portfolio, AI Agents, Usage).
  * Excludes Executive Summary and Action Plan — those will be generated
  * by the backend using this consolidated payload.
  */
@@ -11,7 +11,7 @@ import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
-const REQUIRED_SECTIONS = ['hero', 'snapshot', 'portfolio', 'aiAgents', 'usage', 'whitespace', 'ubp'];
+const REQUIRED_SECTIONS = ['hero', 'snapshot', 'portfolio', 'aiAgents', 'usage'];
 
 /**
  * Generate a unique session ID for this account visit.
@@ -32,8 +32,6 @@ export const buildConsolidatedPayload = ({ sessionId, accountName, clientName, s
     portfolio: sections.portfolio || null,
     aiAgents: sections.aiAgents || null,
     usage: sections.usage || null,
-    whitespace: sections.whitespace || null,
-    ubp: sections.ubp || null,
   },
 });
 
