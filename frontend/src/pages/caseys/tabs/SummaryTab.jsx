@@ -33,10 +33,28 @@ const CARD_CONFIG = {
     titleColor: '#0E7490',
     borderColor: '#00A0DF',
   },
+  accountObjectives: {
+    title: '🎯 Account Objectives',
+    titleColor: '#1E3A8A',
+    borderColor: '#2563EB',
+  },
+  processPainPoints: {
+    title: '⚠ Process Pain Points',
+    titleColor: '#9A3412',
+    borderColor: '#EA580C',
+  },
+  competitiveLandscape: {
+    title: '⚔ Competitive Landscape',
+    titleColor: '#075985',
+    borderColor: '#0EA5E9',
+  },
 };
 
 const SummaryTab = ({ accountName = 'caseys' }) => {
   const { data, loading, error, retry } = useTabFromContext('summary');
+
+  // Some accounts have no data for these newer sections — backend returns null/empty; hide the card entirely rather than rendering it blank.
+  const hasItems = (card) => card && Array.isArray(card.items) && card.items.length > 0;
 
   return (
     <TabLoader loading={loading} error={error} onRetry={retry} data={data}>
@@ -50,11 +68,14 @@ const SummaryTab = ({ accountName = 'caseys' }) => {
               <RelationshipHealthCard data={data.cards.relationshipHealth} />
               <ValueDeliveredCard data={data.cards.valueDelivered} />
               <AdoptionWinsCard data={data.cards.adoptionWins} />
+              {hasItems(data.cards.accountObjectives) && <AccountObjectivesCard data={data.cards.accountObjectives} />}
             </div>
             <div className="flex flex-col gap-4">
               <ConcernsCard data={data.cards.concerns} />
               <ExpansionPrioritiesCard data={data.cards.topExpansionPriorities} />
               <BenchmarkCard data={data.cards.benchmarkMethodology} />
+              {hasItems(data.cards.processPainPoints) && <ProcessPainPointsCard data={data.cards.processPainPoints} />}
+              {hasItems(data.cards.competitiveLandscape) && <CompetitiveLandscapeCard data={data.cards.competitiveLandscape} />}
             </div>
           </div>
         </div>
@@ -161,6 +182,42 @@ const BenchmarkCard = ({ data }) => (
        <li key={i}>
           <strong>{item.name}:</strong> {item.customerValue}
           {item.industryBenchmark && <span className="text-[#5A6180]"> (benchmark: {item.industryBenchmark})</span>}
+        </li>
+      ))}
+    </ul>
+  </CardWrapper>
+);
+
+const AccountObjectivesCard = ({ data }) => (
+  <CardWrapper cardKey="accountObjectives" summary={data.summary}>
+    <ul className="pl-5 text-sm leading-7 list-disc">
+      {data.items.map((item, i) => (
+        <li key={i}>
+          <strong>{item.objective}:</strong> {item.details}
+        </li>
+      ))}
+    </ul>
+  </CardWrapper>
+);
+
+const ProcessPainPointsCard = ({ data }) => (
+  <CardWrapper cardKey="processPainPoints" summary={data.summary}>
+    <ul className="pl-5 text-sm leading-7 list-disc">
+      {data.items.map((item, i) => (
+        <li key={i}>
+          <strong>{item.area}:</strong> {item.description}
+        </li>
+      ))}
+    </ul>
+  </CardWrapper>
+);
+
+const CompetitiveLandscapeCard = ({ data }) => (
+  <CardWrapper cardKey="competitiveLandscape" summary={data.summary}>
+    <ul className="pl-5 text-sm leading-7 list-disc">
+      {data.items.map((item, i) => (
+        <li key={i}>
+          <strong>{item.competitor}</strong> {item.area && <span className="text-[#5A6180]">({item.area})</span>}: {item.strategy}
         </li>
       ))}
     </ul>
