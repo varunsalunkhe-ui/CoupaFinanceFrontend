@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TabLoader from '../../../components/TabLoader';
 import { useDashboard } from '../../../context/DashboardContext';
+import KpiEyeInfo from '../../../components/KpiEyeInfo';
+import { METRIC_DEFINITIONS } from '../../../constants/metricDefinitions';
 
 const CUSTOMER_VALUE_API = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -47,6 +49,25 @@ const formatPercent = (val) => {
   if (val === null || val === undefined || val === 'NA') return ' — ';
   return `${Number(val).toFixed(0)}%`;
 };
+
+
+// One-decimal variant for small-magnitude KPI shares (e.g. 0.02%) that would round to 0% otherwise
+const formatPercent1 = (val) => {
+  const num = parseNumericValue(val);
+  if (num === null) return ' — ';
+  return `${num.toFixed(1)}%`;
+};
+
+// Formats API range strings like "215771.64488 - 323657.46732" as "$215.77K – $323.66K"
+const formatCurrencyRange = (val) => {
+  if (val === null || val === undefined || val === 'NA' || val === 'N/A') return ' — ';
+  if (typeof val === 'string' && /\d\s*-\s*\d/.test(val)) {
+    const [lo, hi] = val.split(/\s*-\s*/).map(parseNumericValue);
+    if (lo !== null && hi !== null) return `${formatCurrency(lo)} – ${formatCurrency(hi)}`;
+  }
+  return formatCurrency(parseNumericValue(val));
+};
+
 
 const SnapshotTab = ({ accountName, clientName }) => {
   const customerName = clientName || accountName;
@@ -156,32 +177,37 @@ const SnapshotTab = ({ accountName, clientName }) => {
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6180]">Section 1 - UBP Measured Spend Data</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-4">
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
+             <div className="relative bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
+                <KpiEyeInfo text={METRIC_DEFINITIONS.coupaPoSpend} />
                 <div className="text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Coupa PO Spend</div>
                 <div className="text-3xl font-bold text-[#0F1733]">{formatCurrency(data.po_spend)}</div>
                 <div className="text-xs text-[#16A34A] mt-1">{data.po_spend_text || ''}</div>
               </div>
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
+              <div className="relative bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
+                <KpiEyeInfo text={METRIC_DEFINITIONS.nonPoInvoiceSpend} />
                 <div className="text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Non-PO Invoice Spend</div>
                 <div className="text-3xl font-bold text-[#0F1733]">{formatCurrency(data.Non_PO_Invoice_Spend)}</div>
                 <div className="text-xs text-[#16A34A] mt-1">{data.Non_PO_Invoice_Spend_text || ''}</div>
               </div>
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
+              <div className="relative bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
+                <KpiEyeInfo text={METRIC_DEFINITIONS.externalPoBasedInvoiceSpend} />
                 <div className="text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">External PO-based Invoice Spend</div>
                 <div className="text-3xl font-bold text-[#0F1733]">{formatCurrency(data.External_PO_based_Invoice_Spend)}</div>
                 <div className="text-xs text-[#16A34A] mt-1">{data.External_PO_based_Invoice_Spend_text || ''}</div>
               </div>
               <div 
-                className="rounded-lg p-5 border-t-4 border-t-[#FF6B35] border-l-0 border-r-0 border-b-0"
+                className="relative rounded-lg p-5 border-t-4 border-t-[#FF6B35] border-l-0 border-r-0 border-b-0"
                 style={{
                   background: 'linear-gradient(155deg, #1e3a8a 0%, #0f172a 100%)',
                 }}
               >
+                 <KpiEyeInfo text={METRIC_DEFINITIONS.totalCoupaSpend} colorClassName="text-[#CFDDF6]/70 hover:text-white" />
                 <div className="text-[12px] uppercase tracking-[0.03em] text-[#B9CBEF] font-bold mb-2">Composition of Total UBP Measured Spend</div>
                 <div className="text-[32px] font-black mt-2.5 text-white" style={{ fontFamily: "'Manrope', sans-serif" }}>{formatCurrency(data.total_coupa_spend)}</div>
                 <div className="text-[11.5px] text-[#CFDDF6] mt-2 font-medium">{'Coupa PO Spend + Non-PO Invoice Spend + External PO-based Invoice Spend'}</div>
               </div>
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
+              <div className="relative bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
+                <KpiEyeInfo text={METRIC_DEFINITIONS.totalAddressableSpend} />
                 <div className="text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Total Addressable Spend (EST.)</div>
                 <div className="text-3xl font-bold text-[#0F1733]">{data.total_addressable_spend === 'NA' ? '~$4.5B' : formatCurrency(data.total_addressable_spend)}</div>
                 <div className="text-xs text-[#5A6180] mt-1">Confirm with finance</div>
@@ -236,12 +262,14 @@ const SnapshotTab = ({ accountName, clientName }) => {
                 <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
                 <div className="p-4">
                   <div className="text-[10px] uppercase tracking-wider text-[#DC2626] font-bold mb-3 ">Procurement</div>
-                  <div className="mb-3 ">
+                  <div className="relative mb-3 pr-5">
+                    <KpiEyeInfo text={METRIC_DEFINITIONS.onContractSavings} />
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">On-Contract Savings</div>
                     <div className="text-2xl font-bold text-[#0F1733]">{formatCurrency(data.Spend_Under_Contract_Savings_Capture)}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Spend_Under_Contract_Savings_Capture_text || ''}</div>
                   </div>
-                  <div>
+                  <div className="relative pr-5">
+                    <KpiEyeInfo text={METRIC_DEFINITIONS.requisitionCycleTime} />
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Requisition Cycle Time</div>
                     <div className="text-2xl font-bold text-[#0F1733]">{formatDays(data.PR_to_PO_Cycle_Time)}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.PR_to_PO_Cycle_Time_text || ''}</div>
@@ -259,7 +287,8 @@ const SnapshotTab = ({ accountName, clientName }) => {
                     <div className="text-2xl font-bold text-[#0F1733]">{formatDays(data.Invoice_Processing_Cycle)}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Invoice_Processing_Cycle_text || ''}</div>
                   </div> */}
-                  <div>
+                  <div className="relative pr-5">
+                    <KpiEyeInfo text={METRIC_DEFINITIONS.firstTimeMatchRate} />
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">First Time Match Rate</div>
                     <div className="text-2xl font-bold text-[#0F1733]">{formatPercent(data.First_Time_Match_Rate)}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.First_Time_Match_Rate_text || ''}</div>
@@ -272,13 +301,15 @@ const SnapshotTab = ({ accountName, clientName }) => {
                 <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
                 <div className="p-4">
                   <div className="text-[10px] uppercase tracking-wider text-[#7C3AED] font-bold mb-3">Contracts & Sourcing</div>
-                  <div className="mb-3">
+                  <div className="relative mb-3 pr-5">
+                    <KpiEyeInfo text={METRIC_DEFINITIONS.totalContracts} />
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Contracts <span className="normal-case">(Includes active contracts)</span></div>
                     <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Contracts}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Contracts_text || ''}</div>
 
                   </div>
-                  <div>
+                  <div className="relative pr-5">
+                    <KpiEyeInfo text={METRIC_DEFINITIONS.totalSourcingProjects} />
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Number of Sourcing Events <span className="normal-case ">(Includes non-completed events)</span></div>
                     <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Sourcing_Projects}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Sourcing_Projects_text || ''}</div>
@@ -335,6 +366,51 @@ const SnapshotTab = ({ accountName, clientName }) => {
                 <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">EPD Rebates</div>
                 <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.EPD_Rebates)}</div>
                 <div className="text-[10px] text-[#5A6180] mt-1">{data.EPD_Rebates_text || 'TTM'}</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
+                <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Early Pay Discounts Captured</div>
+                <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Early_Pay_Discounts_Captured)}</div>
+                <div className="text-[10px] text-[#5A6180] mt-1">
+                  {data.Early_Pay_Discounts_Captured_text && data.Early_Pay_Discounts_Captured_text !== ' — '
+                    ? data.Early_Pay_Discounts_Captured_text
+                    : `${formatPercent1(data.Early_Pay_Discounts_Captured_pct_of_invoice_volume)} of invoice volume`}
+                </div>
+              </div>
+              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
+                <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Digital Payment Volume</div>
+                <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Digital_Payment_Volume)}</div>
+                <div className="text-[10px] text-[#5A6180] mt-1">
+                  {data.Digital_Payment_Volume_text && data.Digital_Payment_Volume_text !== ' — '
+                    ? data.Digital_Payment_Volume_text
+                    : `${formatPercent1(data.Digital_Payment_Volume_pct_of_invoice_volume)} of invoice volume`}
+                </div>
+              </div>
+              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
+                <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Estimated Rebate Opportunity</div>
+                <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrencyRange(data.estimated_rebate_oppurtunity)}</div>
+                <div className="text-[10px] text-[#5A6180] mt-1">{data.estimated_rebate_oppurtunity_text || ''}</div>
+              </div>
+              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7] md:col-span-2">
+                <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Revenue Share by Payment Channel</div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Virtual Card</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.VCard_Revenue_Share)}</div>
+                    <div className="text-[10px] text-[#5A6180] mt-0.5">{formatPercent1(data.VCard_Volume_pct_of_revenue_share)} of rev. share</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Digital Payment</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Digital_Payment_Revenue_Share)}</div>
+                    <div className="text-[10px] text-[#5A6180] mt-0.5">{formatPercent1(data.Digital_Payment_Volume_pct_of_revenue_share)} of rev. share</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Early Pay Discounts</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.EPD_Revenue_Share)}</div>
+                    <div className="text-[10px] text-[#5A6180] mt-0.5">{formatPercent1(data.Early_Pay_Discounts_Captured_pct_of_revenue_share)} of rev. share</div>
+                  </div>
+                </div>
               </div>
             </div>
             {/* Pay strategy callout */}

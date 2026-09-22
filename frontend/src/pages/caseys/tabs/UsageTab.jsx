@@ -15,6 +15,8 @@ import {
 import { Line, Bar } from 'react-chartjs-2';
 import TabLoader from '../../../components/TabLoader';
 import { useDashboard } from '../../../context/DashboardContext';
+import KpiEyeInfo from '../../../components/KpiEyeInfo';
+import { METRIC_DEFINITIONS } from '../../../constants/metricDefinitions';
 
 ChartJS.register(
   CategoryScale,
@@ -445,21 +447,23 @@ const UsageTab = ({ accountName, clientName }) => {
           {/* KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
             {[
-              { kpi: totalCoupa, label: 'Total Coupa Spend' },
-              { kpi: coupaPo, label: 'Coupa PO Spend' },
-              { kpi: nonPoInvoice, label: 'Non-PO Invoice' },
-              { kpi: extPoInvoice, label: 'Ext PO Invoice' },
-              { kpi: totalInvoice, label: 'Total Invoice Spend' },
-              { kpi: extPoSpend, label: 'External PO Spend' },
-              { kpi: onContract, label: 'On-Contract Spend' },
-              { kpi: structured, label: 'Structured Spend' },
-              { kpi: nonExt, label: 'Non-External Spend' },
-              { kpi: expenseSpend, label: 'Expense Spend' },
-            ].map(({ kpi, label }) => {
+              { kpi: totalCoupa, label: 'Total Coupa Spend', defKey: 'totalCoupaSpend' },
+              { kpi: coupaPo, label: 'Coupa PO Spend', defKey: 'coupaPoSpend' },
+              { kpi: nonPoInvoice, label: 'Non-PO Invoice', defKey: 'nonPoInvoiceSpend' },
+              { kpi: extPoInvoice, label: 'Ext PO Invoice', defKey: 'externalPoBasedInvoiceSpend' },
+              { kpi: totalInvoice, label: 'Total Invoice Spend', defKey: 'totalInvoiceSpend' },
+              { kpi: extPoSpend, label: 'External PO Spend', defKey: 'externalPoSpend' },
+              { kpi: onContract, label: 'On-Contract Spend', defKey: 'onContractSpend' },
+              { kpi: structured, label: 'Structured Spend', defKey: 'structuredSpend' },
+              { kpi: nonExt, label: 'Non-External Spend', defKey: null },
+              { kpi: expenseSpend, label: 'Expense Spend', defKey: 'expenseSpend' },
+           ].map(({ kpi, label, defKey }) => {
               const val = getLatest(kpi);
               const growth = getGrowth(kpi);
+              const definition = defKey ? METRIC_DEFINITIONS[defKey] : null;
               return (
-                <div key={label} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 border-l-4 border-l-[#0E9F6E]">
+                <div key={label} className="relative bg-white rounded-xl p-4 shadow-sm border border-gray-100 border-l-4 border-l-[#0E9F6E]">
+                  {definition && <KpiEyeInfo text={definition} />}
                   <div className="text-[10px] text-[#5A6180] uppercase tracking-wide font-semibold mb-1">{label}</div>
                   <div className="text-xl font-bold text-[#1E293B]">{formatCurrency(val)}</div>
                   <div className="flex items-center gap-2 mt-1">

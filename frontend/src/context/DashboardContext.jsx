@@ -9,7 +9,12 @@ const TAB_KEYS = ['whitespace', 'ubp'];
 // Module-level map to prevent duplicate fetches across StrictMode remounts
 const activeFetches = new Map();
 
-export const DashboardProvider = ({ accountName, clientName, children }) => {
+const getCache = (accountName) => {
+  return getDailyCached(CACHE_KEY_PREFIX + accountName);
+};
+
+export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, children }) => {
+  // const cached = getCache(accountName);
   const [tabData, setTabData] = useState({});
   const [tabLoading, setTabLoading] = useState({ summary: true, plan: true });
   const [tabErrors, setTabErrors] = useState({});
@@ -104,6 +109,19 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
     return () => { unmountedRef.current = true; };
   }, []);
 
+  // ubp_run: false means UBP wasn't computed for this account — skip its API call entirely
+  const activeTabKeys = useMemo(
+    () => (ubpEnabled ? TAB_KEYS : TAB_KEYS.filter((k) => k !== 'ubp')),
+    [ubpEnabled]
+  );
+
+  // If UBP is disabled for this account, it will never be loading/erroring — settle it immediately
+  useEffect(() => {
+    if (!ubpEnabled) {
+      setTabLoading(prev => ({ ...prev, ubp: false }));
+    }
+  }, [ubpEnabled]);
+
   const loadAllTabs = useCallback(async () => {
     if (fetchStartedRef.current) return;
     if (activeFetches.has(accountName)) return;
@@ -112,8 +130,8 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
 
     // Mark whitespace/ubp as loading (summary/plan come from consolidated backend)
     const loadingState = { summary: true, plan: true };
-    TAB_KEYS.forEach(k => { loadingState[k] = true; });
-    setTabLoading(loadingState);
+    activeTabKeys.forEach(k => { loadingState[k] = true; });
+    setTabLoading(prev => ({ ...prev, ...loadingState }));
     setTabErrors(prev => ({ summary: prev.summary, plan: prev.plan }));
 
     try {
@@ -134,10 +152,10 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
         } else {
           setTabData(prev => ({ ...prev, [tabKey]: result }));
         }
-      }, TAB_KEYS);
+      }, activeTabKeys);
     } catch (err) {
       if (!unmountedRef.current) {
-        TAB_KEYS.forEach(k => {
+        activeTabKeys.forEach(k => {
           setTabLoading(prev => ({ ...prev, [k]: false }));
           setTabErrors(prev => ({ ...prev, [k]: err.message || 'Failed to load' }));
         });
@@ -145,7 +163,7 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
     } finally {
       activeFetches.delete(accountName);
     }
-  }, [accountName]);
+  }, [accountName,activeTabKeys]);
 
   /**
    * Fetch a single tab on-demand (e.g. when user clicks a tab).
@@ -155,6 +173,8 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
   const fetchTab = useCallback(async (tabKey) => {
     // Already have data — nothing to do
     if (tabData[tabKey]) return;
+
+    if (tabKey === 'ubp' && !ubpEnabled) return;
     // Already fetching via direct click
     if (tabInFlightRef.current.has(tabKey)) return;
     // Batch still running — don't fire parallel requests
@@ -183,6 +203,8 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
   }, [accountName, tabSessions, tabData]);
 
   const retryTab = useCallback(async (tabKey) => {
+    // Account never had UBP computed — never call the backend for it
+    if (tabKey === 'ubp' && !ubpEnabled) return;
     // For summary/plan, re-trigger the consolidated backend call
     if (tabKey === 'summary' || tabKey === 'plan') {
       if (!consolidatedPayload) return;
@@ -252,6 +274,7 @@ export const DashboardProvider = ({ accountName, clientName, children }) => {
       tabData, tabLoading, tabErrors, tabSessions,
       loadAllTabs, fetchTab, retryTab, refreshAll,
       setExternalTabData, externalData, consolidatedPayload, consolidatedSessionId,
+      ubpEnabled,
     }}>
       {children}
     </DashboardContext.Provider>

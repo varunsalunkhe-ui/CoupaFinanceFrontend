@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { fetchClients, toSlug } from '../services/clientsApi';
 import { useAuth } from '../context/AuthContext.jsx';
 import HelpGuideModal from '../components/HelpGuideModal';
+import SearchableSelect from '../components/SearchableSelect';
 
 const SERVICE_NOW_URL = 'https://deloitte.service-now.com';
 
@@ -17,6 +18,26 @@ const getInitials = (name) => {
     .join('');
 };
 
+const formatAcv = (val) => {
+  if (val === null || val === undefined || val === '') return null;
+  const num = Number(val);
+  if (Number.isNaN(num)) return null;
+  const abs = Math.abs(num);
+  if (abs >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+  if (abs >= 1e3) return `$${(num / 1e3).toFixed(0)}K`;
+  return `$${num.toFixed(0)}`;
+};
+
+const HEAT_BADGE_STYLES = {
+  successful: 'bg-emerald-100 text-emerald-700',
+  healthy: 'bg-emerald-100 text-emerald-700',
+  concerned: 'bg-amber-100 text-amber-700',
+  'at risk': 'bg-red-100 text-red-700',
+  terminating: 'bg-red-100 text-red-700',
+};
+
+const getHeatBadgeClass = (heat) => HEAT_BADGE_STYLES[(heat || '').toLowerCase()] || 'bg-gray-100 text-gray-600';
+
 const Home = () => {
   const { logout } = useAuth();
   const userEmail = sessionStorage.getItem('userEmail') || '';
@@ -24,6 +45,9 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [ownerFilter, setOwnerFilter] = useState('');
+  const [cvmOwnerFilter, setCvmOwnerFilter] = useState('');
+  const [sponsorFilter, setSponsorFilter] = useState('');
   const [helpGuideOpen, setHelpGuideOpen] = useState(false);
   const [accountHelpOpen, setAccountHelpOpen] = useState(false);
   const accountHelpRef = useRef(null);
@@ -53,6 +77,13 @@ const Home = () => {
           accountName: client.account_name,
           initials: getInitials(client.account_name),
           color: COLORS[idx % COLORS.length],
+          rating: client.cvm_customer_rating ?? null,
+          heatLevel: client.customer_heat_level || null,
+          acv: client.open_renewal_acv_converted_total ?? null,
+          executiveSponsor: client.coupa_executive_sponsor_name || null,
+          cvmOwner: client.cvm_owner || null,
+          accountOwner: client.account_owner || null,
+          ubpRun: client.ubp_run !== false,
         }));
         setAccounts(mapped);
       } catch (err) {
@@ -66,12 +97,22 @@ const Home = () => {
     return () => { cancelled = true; };
   }, []);
 
-  // Filter accounts based on search
+  // Unique filter options derived from the loaded accounts
+  const ownerOptions = useMemo(() => Array.from(new Set(accounts.map((a) => a.accountOwner).filter(Boolean))).sort(), [accounts]);
+  const cvmOwnerOptions = useMemo(() => Array.from(new Set(accounts.map((a) => a.cvmOwner).filter(Boolean))).sort(), [accounts]);
+  const sponsorOptions = useMemo(() => Array.from(new Set(accounts.map((a) => a.executiveSponsor).filter(Boolean))).sort(), [accounts]);
+
+  // Filter accounts based on search + owner/CVM owner/sponsor filters
   const filteredAccounts = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return accounts;
-    return accounts.filter((account) => account.name.toLowerCase().includes(query));
-  }, [accounts, search]);
+    return accounts.filter((account) => {
+      if (query && !account.name.toLowerCase().includes(query)) return false;
+      if (ownerFilter && account.accountOwner !== ownerFilter) return false;
+      if (cvmOwnerFilter && account.cvmOwner !== cvmOwnerFilter) return false;
+      if (sponsorFilter && account.executiveSponsor !== sponsorFilter) return false;
+      return true;
+    });
+  }, [accounts, search, ownerFilter, cvmOwnerFilter, sponsorFilter]);
 
   const handleLogout = () => {
     logout();
@@ -178,6 +219,38 @@ const Home = () => {
             />
           </div>
         </div>
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 pb-5 flex flex-wrap items-center gap-3">
+          <span className="text-[12px] font-medium text-[#94A3B8]">Filter by:</span>
+          <SearchableSelect
+            label="Account Owner"
+            value={ownerFilter}
+            onChange={setOwnerFilter}
+            options={ownerOptions}
+            className="w-48"
+          />
+          <SearchableSelect
+            label="CVM Owner"
+            value={cvmOwnerFilter}
+            onChange={setCvmOwnerFilter}
+            options={cvmOwnerOptions}
+            className="w-48"
+          />
+          <SearchableSelect
+            label="Executive Sponsor"
+            value={sponsorFilter}
+            onChange={setSponsorFilter}
+            options={sponsorOptions}
+            className="w-48"
+          />
+          {(ownerFilter || cvmOwnerFilter || sponsorFilter) && (
+            <button
+              onClick={() => { setOwnerFilter(''); setCvmOwnerFilter(''); setSponsorFilter(''); }}
+              className="text-xs font-medium text-[#0369A1] hover:text-[#075985] cursor-pointer"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main */}
@@ -251,7 +324,7 @@ const Home = () => {
             <Link
               key={account.key}
               to={`/${account.id}`}
-              state={{ accountName: account.accountName, clientName: account.name }}
+              state={{ accountName: account.accountName, clientName: account.name, ubpRun: account.ubpRun }}
               className="group bg-white rounded-2xl p-6 no-underline transition-all border border-gray-100 hover:border-[#0369A1]/25 hover:shadow-lg hover:shadow-[#0369A1]/[0.06] hover:-translate-y-0.5 flex flex-col"
             >
               <div className="flex items-center justify-between mb-5">
@@ -271,11 +344,25 @@ const Home = () => {
                 {account.name}
               </h3>
               <p className="text-[12px] text-[#94A3B8]">Account Intelligence Dashboard</p>
+              {formatAcv(account.acv) && (
+                <p className="text-[13px] font-bold text-[#0369A1] mt-2">ACV: {formatAcv(account.acv)}</p>
+              )}
               <div className="mt-auto pt-5">
                 <div className="h-px bg-gray-100 mb-3" />
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span className="text-[11px] text-[#94A3B8] font-medium">Active</span>
+                <div className="flex items-center justify-between gap-2">
+                  {account.heatLevel ? (
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${getHeatBadgeClass(account.heatLevel)}`}>
+                      {account.heatLevel}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span className="text-[11px] text-[#94A3B8] font-medium">Active</span>
+                    </span>
+                  )}
+                  {account.rating !== null && account.rating !== undefined && (
+                    <span className="text-[11px] text-[#94A3B8]">Rating: <strong className="text-[#0F172A]">{account.rating}</strong></span>
+                  )}
                 </div>
               </div>
             </Link>

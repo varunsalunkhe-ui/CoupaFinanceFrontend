@@ -14,7 +14,10 @@ import { fetchSection, transformHeroData } from '../services/bigqueryApi';
 import { fetchClients, findClientBySlug } from '../services/clientsApi';
 import InfoTooltip from '../components/InfoTooltip';
 import HelpGuideModal from '../components/HelpGuideModal';
+import AgentLoadingOverlay from '../components/AgentLoadingOverlay';
 import { buildFullDashboardReportHtml, downloadHtmlFile } from '../services/dashboardReportBuilder';
+
+const ENTRY_OVERLAY_DURATION_MS = 8500;
 
 const TABS = [
   {
@@ -62,7 +65,7 @@ const TABS = [
 
 const PPT_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
-const AccountDashboardInner = ({ accountId, accountName, clientName, displayName }) => {
+const AccountDashboardInner = ({ accountId, accountName, clientName, displayName, ubpRun }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('summary');
   const [heroData, setHeroData] = useState(null);
@@ -71,11 +74,18 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
   const [downloadingPpt, setDownloadingPpt] = useState(false);
   const [helpGuideOpen, setHelpGuideOpen] = useState(false);
   const { tabData, externalData, loadAllTabs, refreshAll, setExternalTabData } = useDashboard();
+  const [showEntryOverlay, setShowEntryOverlay] = useState(true);
 
 
   useEffect(() => {
     loadAllTabs();
   }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    setShowEntryOverlay(true);
+    const timer = setTimeout(() => setShowEntryOverlay(false), ENTRY_OVERLAY_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [refreshKey]);
 
   const handleRefresh = useCallback(() => {
     refreshAll();
@@ -138,6 +148,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
   }, [clientName]);
 
   const handleTabClick = (tabId) => {
+    if (tabId === 'ubp' && !ubpRun) return;
     setActiveTab(tabId);
   };
 
@@ -191,6 +202,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
 
   return (
     <div className="min-h-screen bg-[#F6F7FB]">
+      <AgentLoadingOverlay visible={showEntryOverlay} accountName={displayName} />
       <header className="bg-white text-[#1E293B] px-6 py-3 flex items-center justify-between shadow-sm border-b border-gray-200/60">
         <Link to="/" className="flex items-center gap-2.5 no-underline">
           <img src="/coupa.jpg" alt="Coupa" className="h-8 w-8 rounded-lg object-cover" />
@@ -291,20 +303,27 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
           </div>
 
           <div className="flex gap-1 mb-5 border-b border-[#E4E7F1] overflow-x-auto">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 border-b-2 font-semibold text-sm whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === tab.id
-                    ? 'text-[#0369A1] border-[#0369A1]'
-                    : 'text-[#5A6180] border-transparent hover:text-[#0369A1]'
-                }`}
-              >
-                {tab.label}
-                <InfoTooltip text={tab.description} />
-              </button>
-            ))}
+           {TABS.map((tab) => {
+              const isDisabledUbp = tab.id === 'ubp' && !ubpRun;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabClick(tab.id)}
+                  disabled={isDisabledUbp}
+                  title={isDisabledUbp ? 'UBP conversion was not run for this account' : undefined}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 border-b-2 font-semibold text-sm whitespace-nowrap transition-all ${
+                    isDisabledUbp
+                      ? 'text-[#B0B7C3] border-transparent cursor-not-allowed opacity-60'
+                      : activeTab === tab.id
+                        ? 'text-[#0369A1] border-[#0369A1] cursor-pointer'
+                        : 'text-[#5A6180] border-transparent hover:text-[#0369A1] cursor-pointer'
+                  }`}
+                >
+                  {tab.label}
+                  <InfoTooltip text={isDisabledUbp ? 'UBP conversion was not run for this account.' : tab.description} />
+                </button>
+              );
+            })}
           </div>
 
           <div key={refreshKey}>
@@ -339,6 +358,7 @@ const AccountDashboard = () => {
         setClientInfo({
           accountName: location.state.accountName,
           clientName: location.state.clientName,
+           ubpRun: location.state.ubpRun !== false,
         });
         setLoading(false);
         return;
@@ -352,6 +372,7 @@ const AccountDashboard = () => {
           setClientInfo({
             accountName: found.account_name,
             clientName: found.account_name,
+            ubpRun: found.ubp_run !== false,
           });
         }
       } catch (err) {
@@ -377,12 +398,13 @@ const AccountDashboard = () => {
   }
 
   return (
-    <DashboardProvider accountName={clientInfo.accountName} clientName={clientInfo.clientName}>
+     <DashboardProvider accountName={clientInfo.accountName} clientName={clientInfo.clientName} ubpEnabled={clientInfo.ubpRun}>
       <AccountDashboardInner
         accountId={accountId}
         accountName={clientInfo.accountName}
         clientName={clientInfo.clientName}
         displayName={clientInfo.clientName}
+        ubpRun={clientInfo.ubpRun}
       />
     </DashboardProvider>
   );
