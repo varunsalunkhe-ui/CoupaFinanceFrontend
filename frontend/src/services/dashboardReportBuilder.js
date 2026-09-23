@@ -3,7 +3,7 @@
  *
  * Builds downloadable, self-contained HTML reports from dashboard tab data.
  * Used by the per-tab "Download Report" button (AI Agents) and the
- * dashboard-wide "Download Dashboard" button (Hero + all 8 tabs).
+ * dashboard-wide "Download HTML" button (Hero + all 8 tabs).
  */
 
 const esc = (val) => {

@@ -45,6 +45,15 @@ const formatDays = (val) => {
   return `${val} days`;
 };
 
+// Rounds long floating-point day values (e.g. 7.720000000000001) to 2 decimals; passes through already-formatted range strings (e.g. "5.34 - 6.34")
+const formatDayReduction = (val) => {
+  if (val === null || val === undefined || val === '' || val === 'NA') return ' — ';
+  if (typeof val === 'string') return `${val} day reduction`;
+  const num = Number(val);
+  if (!Number.isFinite(num)) return ' — ';
+  return `${Math.round(num * 100) / 100} day reduction`;
+};
+
 const formatPercent = (val) => {
   if (val === null || val === undefined || val === 'NA') return ' — ';
   return `${Number(val).toFixed(0)}%`;
@@ -475,7 +484,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                   <tr className="border-b border-[#E4E7F1]">
                     <td className="px-3 py-2.5 text-[#0F1733]">Reduce Time & Effort to process invoices</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Invoice Smash / Invoicing / Rossum</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.Reduce_Time_and_Effort_to_process_invoices ? `${data.Reduce_Time_and_Effort_to_process_invoices} day reduction` : ' — '}</td>
+                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{formatDayReduction(data.Reduce_Time_and_Effort_to_process_invoices)}</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycle Time − Current Year invoice cycle time</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">18.3 days from ingestion to processed</td>
                   </tr>
@@ -501,7 +510,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                   <tr className={`border-b border-[#E4E7F1] ${isNA2 ? 'opacity-40' : ''}`}>
                     <td className="px-3 py-2.5 text-[#0F1733]">PO Processing Efficiency</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Smart Intake & Orchestration</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.PO_Processing_Efficiency_smart_intake_and_orchestration ? `${data.PO_Processing_Efficiency_smart_intake_and_orchestration} day reduction` : ' — '}</td>
+                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{formatDayReduction(data.PO_Processing_Efficiency_smart_intake_and_orchestration)}</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycletime − CY Requisition Cycle Time</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">6−7 business days</td>
                   </tr>); })()}
@@ -519,7 +528,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
                   <tr className={`border-b border-[#E4E7F1] ${isNA ? 'opacity-40' : ''}`}>
                     <td className="px-3 py-2.5 text-[#0F1733]">PO Processing Efficiency</td>
                     <td className="px-3 py-2.5 text-[#5A6180]">Core Procurement</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{data.PO_Processing_Efficiency_Core_Procurement ? `${data.PO_Processing_Efficiency_Core_Procurement} day reduction` : ' — '}</td>
+                   <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{formatDayReduction(data.PO_Processing_Efficiency_Core_Procurement)}</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycle time − CY Requisition Cycle Time</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">6−7 business days</td>
                   </tr>); })()}

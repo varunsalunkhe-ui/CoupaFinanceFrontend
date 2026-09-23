@@ -238,7 +238,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
               <div className="relative group">
                 <button
                   onClick={handleDownloadDashboard}
-                  aria-label="Download Dashboard"
+                  aria-label="Download HTML"
                   className="flex items-center justify-center w-7 h-7 rounded-lg text-[#0369A1] bg-[#0369A1]/10 hover:bg-[#0369A1]/20 transition-colors cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -246,7 +246,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                   </svg>
                 </button>
                 <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 whitespace-nowrap rounded-md bg-[#0F1733] px-2.5 py-1.5 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  Download Dashboard
+                  Download HTML
                 </span>
               </div>
             </div>
@@ -287,7 +287,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Manage Account Plan
+                Upload Document
               </button>
 
               {/* <button
