@@ -48,6 +48,11 @@ const CARD_CONFIG = {
     titleColor: '#075985',
     borderColor: '#0EA5E9',
   },
+  additionalInsights: {
+    title: '💡 Additional Insights',
+    titleColor: '#3730A3',
+    borderColor: '#6366F1',
+  },
 };
 
 const SummaryTab = ({ accountName = 'caseys' }) => {
@@ -63,20 +68,17 @@ const SummaryTab = ({ accountName = 'caseys' }) => {
           <p className="text-sm text-[#5A6180] mb-4">
             AI-generated executive summary — powered by Coupa Intelligence Agent.
           </p>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-4">
-              <RelationshipHealthCard data={data.cards.relationshipHealth} />
-              <ValueDeliveredCard data={data.cards.valueDelivered} />
-              <AdoptionWinsCard data={data.cards.adoptionWins} />
-              {hasItems(data.cards.accountObjectives) && <AccountObjectivesCard data={data.cards.accountObjectives} />}
-            </div>
-            <div className="flex flex-col gap-4">
-              <ConcernsCard data={data.cards.concerns} />
-              <ExpansionPrioritiesCard data={data.cards.topExpansionPriorities} />
-              <BenchmarkCard data={data.cards.benchmarkMethodology} />
-              {hasItems(data.cards.processPainPoints) && <ProcessPainPointsCard data={data.cards.processPainPoints} />}
-              {hasItems(data.cards.competitiveLandscape) && <CompetitiveLandscapeCard data={data.cards.competitiveLandscape} />}
-            </div>
+          <div className="columns-1 lg:columns-2 gap-4">
+            <div className="mb-4 break-inside-avoid"><RelationshipHealthCard data={data.cards.relationshipHealth} /></div>
+            <div className="mb-4 break-inside-avoid"><ConcernsCard data={data.cards.concerns} /></div>
+            <div className="mb-4 break-inside-avoid"><ValueDeliveredCard data={data.cards.valueDelivered} /></div>
+            <div className="mb-4 break-inside-avoid"><ExpansionPrioritiesCard data={data.cards.topExpansionPriorities} /></div>
+            <div className="mb-4 break-inside-avoid"><AdoptionWinsCard data={data.cards.adoptionWins} /></div>
+            <div className="mb-4 break-inside-avoid"><BenchmarkCard data={data.cards.benchmarkMethodology} /></div>
+            {hasItems(data.cards.accountObjectives) && <div className="mb-4 break-inside-avoid"><AccountObjectivesCard data={data.cards.accountObjectives} /></div>}
+            {hasItems(data.cards.processPainPoints) && <div className="mb-4 break-inside-avoid"><ProcessPainPointsCard data={data.cards.processPainPoints} /></div>}
+            {hasItems(data.cards.competitiveLandscape) && <div className="mb-4 break-inside-avoid"><CompetitiveLandscapeCard data={data.cards.competitiveLandscape} /></div>}
+            {hasItems(data.cards.additionalInsights) && <div className="mb-4 break-inside-avoid"><AdditionalInsightsCard data={data.cards.additionalInsights} /></div>}
           </div>
         </div>
       )}
@@ -218,6 +220,18 @@ const CompetitiveLandscapeCard = ({ data }) => (
       {data.items.map((item, i) => (
         <li key={i}>
           <strong>{item.competitor}</strong> {item.area && <span className="text-[#5A6180]">({item.area})</span>}: {item.strategy}
+        </li>
+      ))}
+    </ul>
+  </CardWrapper>
+);
+
+const AdditionalInsightsCard = ({ data }) => (
+  <CardWrapper cardKey="additionalInsights" summary={data.summary}>
+    <ul className="pl-5 text-sm leading-7 list-disc">
+      {data.items.map((item, i) => (
+        <li key={i}>
+          <strong>{item.insight}:</strong> {item.supportingData}
         </li>
       ))}
     </ul>

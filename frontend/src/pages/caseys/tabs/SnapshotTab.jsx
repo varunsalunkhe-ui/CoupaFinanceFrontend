@@ -67,16 +67,6 @@ const formatPercent1 = (val) => {
   return `${num.toFixed(1)}%`;
 };
 
-// Formats API range strings like "215771.64488 - 323657.46732" as "$215.77K – $323.66K"
-const formatCurrencyRange = (val) => {
-  if (val === null || val === undefined || val === 'NA' || val === 'N/A') return ' — ';
-  if (typeof val === 'string' && /\d\s*-\s*\d/.test(val)) {
-    const [lo, hi] = val.split(/\s*-\s*/).map(parseNumericValue);
-    if (lo !== null && hi !== null) return `${formatCurrency(lo)} – ${formatCurrency(hi)}`;
-  }
-  return formatCurrency(parseNumericValue(val));
-};
-
 
 const SnapshotTab = ({ accountName, clientName }) => {
   const customerName = clientName || accountName;
@@ -346,76 +336,62 @@ const SnapshotTab = ({ accountName, clientName }) => {
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6180]">Section 3 · Coupa Pay Performance</h3>
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600">Coupa Pay data is now available and has been merged.</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
-                <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Spend Thru Coupa Pay</div>
-                <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Spend_Thru_Coupa_Pay)}</div>
-                <div className="text-[10px] text-[#5A6180] mt-1">{data.Spend_Thru_Coupa_Pay_text || 'TTM'}</div>
-              </div>
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7] md:col-span-3">
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">PO Volume</div>
-                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.VCard_On_PO_Volume)}</div>
-                    <div className="text-[10px] text-[#5A6180] mt-0.5">{data.VCard_On_PO_Volume_text || ''}</div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#0F1733] mb-3">Digital Payments</div>
+                <div className="grid grid-cols-3 divide-x divide-[#E4E7F1]">
+                  <div className="pr-3">
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Total Digital Payment Volume</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Digital_Payment_Volume)}</div>
+                    <div className="text-[10px] text-[#5A6180] mt-0.5">{data.Digital_Payment_Volume_text || ''}</div>
                   </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Invoice Volume</div>
-                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.VCard_On_Invoice_Volume)}</div>
-                    <div className="text-[10px] text-[#5A6180] mt-0.5">{data.VCard_On_Invoice_Volume_text || ''}</div>
+                  <div className="px-3">
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Digital Payment Volume % of Invoice Volume</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatPercent1(data.Digital_Payment_Volume_pct_of_invoice_volume)}</div>
+                    <div className="text-[10px] text-[#5A6180] mt-0.5">of total approved invoice volume</div>
                   </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Virtual Card Volume</div>
-                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.VCard_Volume)}</div>
-                    <div className="text-[10px] text-[#5A6180] mt-0.5">{data.VCard_Volume_text || ''}</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
-                <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">EPD Rebates</div>
-                <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.EPD_Rebates)}</div>
-                <div className="text-[10px] text-[#5A6180] mt-1">{data.EPD_Rebates_text || 'TTM'}</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
-                <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Early Pay Discounts Captured</div>
-                <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Early_Pay_Discounts_Captured)}</div>
-                <div className="text-[10px] text-[#5A6180] mt-1">
-                  {data.Early_Pay_Discounts_Captured_text && data.Early_Pay_Discounts_Captured_text !== ' — '
-                    ? data.Early_Pay_Discounts_Captured_text
-                    : `${formatPercent1(data.Early_Pay_Discounts_Captured_pct_of_invoice_volume)} of invoice volume`}
-                </div>
-              </div>
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
-                <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Digital Payment Volume</div>
-                <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Digital_Payment_Volume)}</div>
-                <div className="text-[10px] text-[#5A6180] mt-1">
-                  {data.Digital_Payment_Volume_text && data.Digital_Payment_Volume_text !== ' — '
-                    ? data.Digital_Payment_Volume_text
-                    : `${formatPercent1(data.Digital_Payment_Volume_pct_of_invoice_volume)} of invoice volume`}
-                </div>
-              </div>
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
-                <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Estimated Rebate Opportunity</div>
-                <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrencyRange(data.estimated_rebate_oppurtunity)}</div>
-                <div className="text-[10px] text-[#5A6180] mt-1">{data.estimated_rebate_oppurtunity_text || ''}</div>
-              </div>
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7] md:col-span-2">
-                <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Revenue Share by Payment Channel</div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Virtual Card</div>
-                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.VCard_Revenue_Share)}</div>
-                    <div className="text-[10px] text-[#5A6180] mt-0.5">{formatPercent1(data.VCard_Volume_pct_of_revenue_share)} of rev. share</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Digital Payment</div>
+                  <div className="pl-3">
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Transaction Revenue — Digital Payments</div>
                     <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Digital_Payment_Revenue_Share)}</div>
                     <div className="text-[10px] text-[#5A6180] mt-0.5">{formatPercent1(data.Digital_Payment_Volume_pct_of_revenue_share)} of rev. share</div>
                   </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Early Pay Discounts</div>
+                </div>
+              </div>
+              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#0F1733] mb-3">Virtual Cards</div>
+                <div className="grid grid-cols-3 divide-x divide-[#E4E7F1]">
+                  <div className="pr-3">
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Total Virtual Card Volume</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.VCard_Volume)}</div>
+                    <div className="text-[10px] text-[#5A6180] mt-0.5">{data.VCard_Volume_text || ''}</div>
+                  </div>
+                  <div className="px-3">
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Virtual Card Volume % of Invoice Volume</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatPercent1(data.VCard_Volume_pct_of_invoice_volume)}</div>
+                    <div className="text-[10px] text-[#5A6180] mt-0.5">of total approved invoice volume</div>
+                  </div>
+                  <div className="pl-3">
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Transaction Revenue — Virtual Cards</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.VCard_Revenue_Share)}</div>
+                    <div className="text-[10px] text-[#5A6180] mt-0.5">{formatPercent1(data.VCard_Volume_pct_of_revenue_share)} of rev. share</div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#0F1733] mb-3">EPD</div>
+                <div className="grid grid-cols-3 divide-x divide-[#E4E7F1]">
+                  <div className="pr-3">
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Total EPD Discount Volume</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Early_Pay_Discounts_Captured)}</div>
+                    <div className="text-[10px] text-[#5A6180] mt-0.5">{data.Early_Pay_Discounts_Captured_text || ''}</div>
+                  </div>
+                  <div className="px-3">
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Total EPD Invoice Volume % of Invoice Volume</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatPercent1(data.Early_Pay_Discounts_Captured_pct_of_invoice_volume)}</div>
+                    <div className="text-[10px] text-[#5A6180] mt-0.5">of total approved invoice volume</div>
+                  </div>
+                  <div className="pl-3">
+                    <div className="text-[9px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1">Transaction Revenue — EPD</div>
                     <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.EPD_Revenue_Share)}</div>
                     <div className="text-[10px] text-[#5A6180] mt-0.5">{formatPercent1(data.Early_Pay_Discounts_Captured_pct_of_revenue_share)} of rev. share</div>
                   </div>

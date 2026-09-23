@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 /**
- * A dropdown filter with an inline search box, used in place of a plain <select>
- * so users can type to narrow long option lists (account/CVM owners, sponsors, etc.).
+ * A multi-select dropdown filter with an inline search box, used in place of a plain <select>
+ * so users can type to narrow long option lists and pick multiple values (account/CVM owners, sponsors, etc.).
+ * `values` is always an array; an empty array means "All".
  */
-const SearchableSelect = ({ label, value, onChange, options, className = '' }) => {
+const SearchableSelect = ({ label, values = [], onChange, options, className = '' }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const containerRef = useRef(null);
@@ -34,10 +35,19 @@ const SearchableSelect = ({ label, value, onChange, options, className = '' }) =
     return options.filter((opt) => opt.toLowerCase().includes(q));
   }, [options, query]);
 
-  const handleSelect = (opt) => {
-    onChange(opt);
-    setOpen(false);
+  const toggleOption = (opt) => {
+    if (values.includes(opt)) {
+      onChange(values.filter((v) => v !== opt));
+    } else {
+      onChange([...values, opt]);
+    }
   };
+
+  const buttonLabel = values.length === 0
+    ? `${label} (All)`
+    : values.length === 1
+      ? values[0]
+      : `${label} (${values.length} selected)`;
 
   return (
     <div className={`relative ${className}`} ref={containerRef}>
@@ -45,10 +55,10 @@ const SearchableSelect = ({ label, value, onChange, options, className = '' }) =
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={`w-full text-sm rounded-lg border border-gray-200 bg-[#F8FAFC] px-3 py-1.5 flex items-center justify-between gap-2 focus:outline-none focus:border-[#0369A1] focus:ring-2 focus:ring-[#0369A1]/10 cursor-pointer ${
-          value ? 'text-[#1E293B]' : 'text-[#64748B]'
+          values.length > 0 ? 'text-[#1E293B]' : 'text-[#64748B]'
         }`}
       >
-        <span className="truncate">{value || `${label} (All)`}</span>
+        <span className="truncate">{buttonLabel}</span>
         <svg className={`w-3.5 h-3.5 shrink-0 text-[#94A3B8] transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
@@ -68,24 +78,34 @@ const SearchableSelect = ({ label, value, onChange, options, className = '' }) =
           <div className="max-h-56 overflow-y-auto py-1">
             <button
               type="button"
-              onClick={() => handleSelect('')}
-              className={`w-full text-left text-sm px-3 py-1.5 hover:bg-[#0369A1]/5 cursor-pointer ${!value ? 'text-[#0369A1] font-medium' : 'text-[#1E293B]'}`}
+              onClick={() => onChange([])}
+              className={`w-full text-left text-sm px-3 py-1.5 hover:bg-[#0369A1]/5 cursor-pointer ${values.length === 0 ? 'text-[#0369A1] font-medium' : 'text-[#1E293B]'}`}
             >
               {label} (All)
             </button>
             {filteredOptions.length === 0 && (
               <div className="px-3 py-2 text-xs text-[#94A3B8]">No matches</div>
             )}
-            {filteredOptions.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => handleSelect(opt)}
-                className={`w-full text-left text-sm px-3 py-1.5 hover:bg-[#0369A1]/5 cursor-pointer truncate ${opt === value ? 'text-[#0369A1] font-medium' : 'text-[#1E293B]'}`}
-              >
-                {opt}
-              </button>
-            ))}
+            {filteredOptions.map((opt) => {
+              const checked = values.includes(opt);
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => toggleOption(opt)}
+                  className={`w-full text-left text-sm px-3 py-1.5 hover:bg-[#0369A1]/5 cursor-pointer truncate flex items-center gap-2 ${checked ? 'text-[#0369A1] font-medium' : 'text-[#1E293B]'}`}
+                >
+                  <span className={`shrink-0 w-3.5 h-3.5 rounded border flex items-center justify-center ${checked ? 'bg-[#0369A1] border-[#0369A1]' : 'border-gray-300'}`}>
+                    {checked && (
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </span>
+                  <span className="truncate">{opt}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -94,3 +114,4 @@ const SearchableSelect = ({ label, value, onChange, options, className = '' }) =
 };
 
 export default SearchableSelect;
+

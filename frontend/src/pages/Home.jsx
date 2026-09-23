@@ -45,9 +45,9 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const [ownerFilter, setOwnerFilter] = useState('');
-  const [cvmOwnerFilter, setCvmOwnerFilter] = useState('');
-  const [sponsorFilter, setSponsorFilter] = useState('');
+  const [ownerFilter, setOwnerFilter] = useState([]);
+  const [cvmOwnerFilter, setCvmOwnerFilter] = useState([]);
+  const [sponsorFilter, setSponsorFilter] = useState([]);
   const [helpGuideOpen, setHelpGuideOpen] = useState(false);
   const [accountHelpOpen, setAccountHelpOpen] = useState(false);
   const accountHelpRef = useRef(null);
@@ -102,14 +102,14 @@ const Home = () => {
   const cvmOwnerOptions = useMemo(() => Array.from(new Set(accounts.map((a) => a.cvmOwner).filter(Boolean))).sort(), [accounts]);
   const sponsorOptions = useMemo(() => Array.from(new Set(accounts.map((a) => a.executiveSponsor).filter(Boolean))).sort(), [accounts]);
 
-  // Filter accounts based on search + owner/CVM owner/sponsor filters
+  // Filter accounts based on search + owner/CVM owner/sponsor filters (each supports multiple selections)
   const filteredAccounts = useMemo(() => {
     const query = search.trim().toLowerCase();
     return accounts.filter((account) => {
       if (query && !account.name.toLowerCase().includes(query)) return false;
-      if (ownerFilter && account.accountOwner !== ownerFilter) return false;
-      if (cvmOwnerFilter && account.cvmOwner !== cvmOwnerFilter) return false;
-      if (sponsorFilter && account.executiveSponsor !== sponsorFilter) return false;
+      if (ownerFilter.length > 0 && !ownerFilter.includes(account.accountOwner)) return false;
+      if (cvmOwnerFilter.length > 0 && !cvmOwnerFilter.includes(account.cvmOwner)) return false;
+      if (sponsorFilter.length > 0 && !sponsorFilter.includes(account.executiveSponsor)) return false;
       return true;
     });
   }, [accounts, search, ownerFilter, cvmOwnerFilter, sponsorFilter]);
@@ -137,7 +137,7 @@ const Home = () => {
               </svg>
               Help & FAQ Guide
             </button>
-            <div className="relative" ref={accountHelpRef}>
+            {/* <div className="relative" ref={accountHelpRef}>
               <button
                 onClick={() => setAccountHelpOpen((v) => !v)}
                 aria-label="Can't find your account?"
@@ -183,7 +183,7 @@ const Home = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
             <span className="text-sm text-[#64748B] hidden sm:inline">{userEmail}</span>
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0369A1] to-[#0891B2] flex items-center justify-center text-white text-xs font-bold shadow-sm">
               {userEmail ? userEmail[0].toUpperCase() : 'U'}
@@ -223,28 +223,28 @@ const Home = () => {
           <span className="text-[12px] font-medium text-[#94A3B8]">Filter by:</span>
           <SearchableSelect
             label="Account Owner"
-            value={ownerFilter}
+            values={ownerFilter}
             onChange={setOwnerFilter}
             options={ownerOptions}
             className="w-48"
           />
           <SearchableSelect
             label="CVM Owner"
-            value={cvmOwnerFilter}
+            values={cvmOwnerFilter}
             onChange={setCvmOwnerFilter}
             options={cvmOwnerOptions}
             className="w-48"
           />
           <SearchableSelect
             label="Executive Sponsor"
-            value={sponsorFilter}
+            values={sponsorFilter}
             onChange={setSponsorFilter}
             options={sponsorOptions}
             className="w-48"
           />
-          {(ownerFilter || cvmOwnerFilter || sponsorFilter) && (
+          {(ownerFilter.length > 0 || cvmOwnerFilter.length > 0 || sponsorFilter.length > 0) && (
             <button
-              onClick={() => { setOwnerFilter(''); setCvmOwnerFilter(''); setSponsorFilter(''); }}
+              onClick={() => { setOwnerFilter([]); setCvmOwnerFilter([]); setSponsorFilter([]); }}
               className="text-xs font-medium text-[#0369A1] hover:text-[#075985] cursor-pointer"
             >
               Clear filters
@@ -301,10 +301,10 @@ const Home = () => {
               </h3>
               <p className="text-[13px] text-[#94A3B8] max-w-sm mb-6">
                 {search
-                  ? "We couldn't find any account in dev matching your search/filtering settings. Production supports ~168 accounts."
+                  ? "We couldn't find any account in dev matching your search/filtering settings."
                   : 'No accounts are currently available for your user.'}
               </p>
-              <div className="bg-[#F8FAFC] border border-gray-100 rounded-xl px-6 py-5 w-full max-w-sm">
+              {/* <div className="bg-[#F8FAFC] border border-gray-100 rounded-xl px-6 py-5 w-full max-w-sm">
                 <p className="text-xs text-[#64748B] mb-3">Need to review a customer that isn't listed?</p>
                 <a
                   href={SERVICE_NOW_URL}
@@ -317,7 +317,7 @@ const Home = () => {
                   </svg>
                   Request Account Access in ServiceNow
                 </a>
-              </div>
+              </div> */}
             </div>
           )}
           {filteredAccounts.map((account) => (
