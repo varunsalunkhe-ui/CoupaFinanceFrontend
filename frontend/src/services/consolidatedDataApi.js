@@ -45,14 +45,20 @@ export const isPayloadComplete = (sections) => {
 
 /**
  * Send consolidated data to the backend /query API.
+ * @param {object} payload
+ * @param {object} [options]
+ * @param {boolean} [options.bypassCache] - Force a fresh agent call and refresh
+ *   the cache entry (used by "Update Data").
  * Returns { executiveSummary, actionPlan, metadata } from the response.
  */
-export const sendConsolidatedData = async (payload) => {
+export const sendConsolidatedData = async (payload, { bypassCache = false } = {}) => {
   const body = {
     prompt: `Give account plan for this client ${payload.clientName}.`,
     user_id: 'default-user',
     session_id: payload.sessionId,
     data: payload,
+    cache_key: `${payload.clientName}:consolidated`,
+    bypass_cache: bypassCache,
   };
 
   console.log('[ConsolidatedData] Sending to backend:', JSON.stringify(body).slice(0, 500));

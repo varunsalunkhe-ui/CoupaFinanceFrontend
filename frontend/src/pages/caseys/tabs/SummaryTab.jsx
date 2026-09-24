@@ -75,10 +75,10 @@ const SummaryTab = ({ accountName = 'caseys' }) => {
             <div className="mb-4 break-inside-avoid"><ExpansionPrioritiesCard data={data.cards.topExpansionPriorities} /></div>
             <div className="mb-4 break-inside-avoid"><AdoptionWinsCard data={data.cards.adoptionWins} /></div>
             <div className="mb-4 break-inside-avoid"><BenchmarkCard data={data.cards.benchmarkMethodology} /></div>
-            {hasItems(data.cards.accountObjectives) && <div className="mb-4 break-inside-avoid"><AccountObjectivesCard data={data.cards.accountObjectives} /></div>}
+            {/* {hasItems(data.cards.accountObjectives) && <div className="mb-4 break-inside-avoid"><AccountObjectivesCard data={data.cards.accountObjectives} /></div>}
             {hasItems(data.cards.processPainPoints) && <div className="mb-4 break-inside-avoid"><ProcessPainPointsCard data={data.cards.processPainPoints} /></div>}
             {hasItems(data.cards.competitiveLandscape) && <div className="mb-4 break-inside-avoid"><CompetitiveLandscapeCard data={data.cards.competitiveLandscape} /></div>}
-            {hasItems(data.cards.additionalInsights) && <div className="mb-4 break-inside-avoid"><AdditionalInsightsCard data={data.cards.additionalInsights} /></div>}
+            {hasItems(data.cards.additionalInsights) && <div className="mb-4 break-inside-avoid"><AdditionalInsightsCard data={data.cards.additionalInsights} /></div>} */}
           </div>
         </div>
       )}
@@ -190,52 +190,52 @@ const BenchmarkCard = ({ data }) => (
   </CardWrapper>
 );
 
-const AccountObjectivesCard = ({ data }) => (
-  <CardWrapper cardKey="accountObjectives" summary={data.summary}>
-    <ul className="pl-5 text-sm leading-7 list-disc">
-      {data.items.map((item, i) => (
-        <li key={i}>
-          <strong>{item.objective}:</strong> {item.details}
-        </li>
-      ))}
-    </ul>
-  </CardWrapper>
-);
+// const AccountObjectivesCard = ({ data }) => (
+//   <CardWrapper cardKey="accountObjectives" summary={data.summary}>
+//     <ul className="pl-5 text-sm leading-7 list-disc">
+//       {data.items.map((item, i) => (
+//         <li key={i}>
+//           <strong>{item.objective}:</strong> {item.details}
+//         </li>
+//       ))}
+//     </ul>
+//   </CardWrapper>
+// );
 
-const ProcessPainPointsCard = ({ data }) => (
-  <CardWrapper cardKey="processPainPoints" summary={data.summary}>
-    <ul className="pl-5 text-sm leading-7 list-disc">
-      {data.items.map((item, i) => (
-        <li key={i}>
-          <strong>{item.area}:</strong> {item.description}
-        </li>
-      ))}
-    </ul>
-  </CardWrapper>
-);
+// const ProcessPainPointsCard = ({ data }) => (
+//   <CardWrapper cardKey="processPainPoints" summary={data.summary}>
+//     <ul className="pl-5 text-sm leading-7 list-disc">
+//       {data.items.map((item, i) => (
+//         <li key={i}>
+//           <strong>{item.area}:</strong> {item.description}
+//         </li>
+//       ))}
+//     </ul>
+//   </CardWrapper>
+// );
 
-const CompetitiveLandscapeCard = ({ data }) => (
-  <CardWrapper cardKey="competitiveLandscape" summary={data.summary}>
-    <ul className="pl-5 text-sm leading-7 list-disc">
-      {data.items.map((item, i) => (
-        <li key={i}>
-          <strong>{item.competitor}</strong> {item.area && <span className="text-[#5A6180]">({item.area})</span>}: {item.strategy}
-        </li>
-      ))}
-    </ul>
-  </CardWrapper>
-);
+// const CompetitiveLandscapeCard = ({ data }) => (
+//   <CardWrapper cardKey="competitiveLandscape" summary={data.summary}>
+//     <ul className="pl-5 text-sm leading-7 list-disc">
+//       {data.items.map((item, i) => (
+//         <li key={i}>
+//           <strong>{item.competitor}</strong> {item.area && <span className="text-[#5A6180]">({item.area})</span>}: {item.strategy}
+//         </li>
+//       ))}
+//     </ul>
+//   </CardWrapper>
+// );
 
-const AdditionalInsightsCard = ({ data }) => (
-  <CardWrapper cardKey="additionalInsights" summary={data.summary}>
-    <ul className="pl-5 text-sm leading-7 list-disc">
-      {data.items.map((item, i) => (
-        <li key={i}>
-          <strong>{item.insight}:</strong> {item.supportingData}
-        </li>
-      ))}
-    </ul>
-  </CardWrapper>
-);
+// const AdditionalInsightsCard = ({ data }) => (
+//   <CardWrapper cardKey="additionalInsights" summary={data.summary}>
+//     <ul className="pl-5 text-sm leading-7 list-disc">
+//       {data.items.map((item, i) => (
+//         <li key={i}>
+//           <strong>{item.insight}:</strong> {item.supportingData}
+//         </li>
+//       ))}
+//     </ul>
+//   </CardWrapper>
+// );
 
 export default SummaryTab;

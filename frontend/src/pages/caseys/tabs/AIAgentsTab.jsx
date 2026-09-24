@@ -4,7 +4,7 @@ import { useDashboard } from '../../../context/DashboardContext';
 
 const AI_AGENTS_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
-const AIAgentsTab = ({ accountName, clientName }) => {
+const AIAgentsTab = ({ accountName, clientName, forceRefresh = false }) => {
   const customerName = clientName || accountName;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,6 +16,7 @@ const AIAgentsTab = ({ accountName, clientName }) => {
     setError(null);
     try {
       const params = new URLSearchParams({ customer_name: customerName, section: 'ai-agents' });
+      if (forceRefresh) params.set('refresh', 'true');
       const response = await fetch(`${AI_AGENTS_API_BASE}/section?${params.toString()}`, {
         headers: { 'accept': 'application/json', 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
       });
@@ -30,7 +31,7 @@ const AIAgentsTab = ({ accountName, clientName }) => {
     } finally {
       setLoading(false);
     }
-  }, [customerName]);
+  }, [customerName, forceRefresh]);
 
   useEffect(() => {
     fetchAgentAccess();

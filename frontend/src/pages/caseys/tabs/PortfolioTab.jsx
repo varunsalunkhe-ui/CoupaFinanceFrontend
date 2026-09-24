@@ -104,7 +104,7 @@ const buildHeatmapData = (heatmap) => {
   return { columns, aiPlatform };
 };
 
-const PortfolioTab = ({ accountName, clientName }) => {
+const PortfolioTab = ({ accountName, clientName, forceRefresh = false }) => {
   const customerName = clientName || accountName;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -122,6 +122,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
     setError(null);
     try {
       const params = new URLSearchParams({ customer_name: customerName, section: 'product-portfolio' });
+      if (forceRefresh) params.set('refresh', 'true');
       const response = await fetch(
         `${PORTFOLIO_API}/section?${params.toString()}`,
         { headers: { accept: 'application/json', 'Cache-Control': 'no-cache', Pragma: 'no-cache' } }
@@ -137,7 +138,7 @@ const PortfolioTab = ({ accountName, clientName }) => {
     } finally {
       if (!unmountedRef.current) setLoading(false);
     }
-  }, [customerName]);
+  }, [customerName, forceRefresh]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

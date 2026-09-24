@@ -22,6 +22,10 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
   const fetchStartedRef = useRef(false);
   const unmountedRef = useRef(false);
   const tabInFlightRef = useRef(new Set());
+  // Set by refreshAll() ('Update Data'); read once per fetch call, cleared once
+  // the last dependent call (the consolidated summary/plan generation) settles.
+  const bypassCacheRef = useRef(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // ── Consolidated Data (Hero + 4 tabs, excl. Executive Summary & Action Plan) ──
   const [consolidatedSessionId, setConsolidatedSessionId] = useState(() => generateSessionId());
@@ -78,7 +82,7 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
     setTabLoading(prev => ({ ...prev, summary: true, plan: true }));
     setTabErrors(prev => ({ ...prev, summary: null, plan: null }));
 
-    sendConsolidatedData(consolidatedPayload)
+    sendConsolidatedData(consolidatedPayload, { bypassCache: bypassCacheRef.current })
       .then(({ executiveSummary, actionPlan }) => {
         if (unmountedRef.current) return;
         if (executiveSummary) {
@@ -98,8 +102,10 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
         setTabErrors(prev => ({ ...prev, summary: msg, plan: msg }));
       })
       .finally(() => {
+        bypassCacheRef.current = false;
         if (!unmountedRef.current) {
           setTabLoading(prev => ({ ...prev, summary: false, plan: false }));
+          setRefreshing(false);
         }
       });
   }, [consolidatedPayload]);
@@ -108,6 +114,18 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
     unmountedRef.current = false;
     return () => { unmountedRef.current = true; };
   }, []);
+
+  // Safety net: "refreshing" is normally cleared once the consolidated
+  // summary/plan call settles (see effect above), but that call only fires
+  // once hero + all 4 BigQuery sections succeed. If one of those never
+  // resolves (e.g. a downstream failure), don't leave the "Update Data"
+  // button stuck disabled forever — bound it to the agent's own worst-case
+  // timeout window.
+  useEffect(() => {
+    if (!refreshing) return;
+    const timer = setTimeout(() => setRefreshing(false), 190000);
+    return () => clearTimeout(timer);
+  }, [refreshing]);
 
   // ubp_run: false means UBP wasn't computed for this account — skip its API call entirely
   const activeTabKeys = useMemo(
@@ -152,7 +170,7 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
         } else {
           setTabData(prev => ({ ...prev, [tabKey]: result }));
         }
-      }, activeTabKeys);
+      }, activeTabKeys, bypassCacheRef.current);
     } catch (err) {
       if (!unmountedRef.current) {
         activeTabKeys.forEach(k => {
@@ -261,6 +279,10 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
     // Reset state so loadAllTabs can run again
     fetchStartedRef.current = false;
     activeFetches.delete(accountName);
+    // "Update Data": every downstream call triggered by this pass must bypass
+    // the server-side cache and refresh it with the fresh response.
+    bypassCacheRef.current = true;
+    setRefreshing(true);
     setTabData({});
     setTabLoading({ summary: true, plan: true });
     setTabErrors({});
@@ -274,7 +296,7 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
       tabData, tabLoading, tabErrors, tabSessions,
       loadAllTabs, fetchTab, retryTab, refreshAll,
       setExternalTabData, externalData, consolidatedPayload, consolidatedSessionId,
-      ubpEnabled,
+      ubpEnabled, refreshing,
     }}>
       {children}
     </DashboardContext.Provider>

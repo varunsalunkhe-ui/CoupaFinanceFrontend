@@ -68,7 +68,7 @@ const formatPercent1 = (val) => {
 };
 
 
-const SnapshotTab = ({ accountName, clientName }) => {
+const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
   const customerName = clientName || accountName;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -103,6 +103,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
     setError(null);
     try {
       const params = new URLSearchParams({ customer_name: customerName, section: 'value_snapshot' });
+      if (forceRefresh) params.set('refresh', 'true');
       const response = await fetch(`${CUSTOMER_VALUE_API}/section?${params.toString()}`, {
         headers: { accept: 'application/json', 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
       });
@@ -120,7 +121,7 @@ const SnapshotTab = ({ accountName, clientName }) => {
     } finally {
       if (!unmountedRef.current) setLoading(false);
     }
-  }, [customerName]);
+  }, [customerName, forceRefresh]);
 
   useEffect(() => {
     fetchData();

@@ -74,13 +74,17 @@ function normalizeOutput(output) {
  * @param {number} retries - Number of retry attempts on 500/network errors
  * @returns {{ output: object, sessionId: string }}
  */
-const queryAgent = async (prompt, sessionId = null, retries = 3) => {
+const queryAgent = async (prompt, sessionId = null, retries = 3, cacheKey = null, bypassCache = false) => {
   let lastError;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const body = { prompt, user_id: 'default-user' };
       if (sessionId) body.session_id = sessionId;
+      if (cacheKey) {
+        body.cache_key = cacheKey;
+        body.bypass_cache = bypassCache;
+      }
 
       const response = await axios.post(`${baseURL}/query`, body, {
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -125,13 +129,14 @@ const queryAgent = async (prompt, sessionId = null, retries = 3) => {
 };
 
 
-export const fetchAllTabsInSession = async (accountName, onTabResult, tabKeysToFetch = null) => {
+export const fetchAllTabsInSession = async (accountName, onTabResult, tabKeysToFetch = null, bypassCache = false) => {
   const tabKeys = tabKeysToFetch || Object.keys(TAB_PROMPTS);
 
   const promises = tabKeys.map(async (tabKey) => {
     const prompt = TAB_PROMPTS[tabKey](accountName);
+    const cacheKey = `${accountName}:${tabKey}`;
     try {
-      const result = await queryAgent(prompt, null);
+      const result = await queryAgent(prompt, null, 3, cacheKey, bypassCache);
       onTabResult(tabKey, result.output, null, result.sessionId);
     } catch (err) {
       onTabResult(tabKey, null, err.message || 'Failed to load', null);
@@ -144,9 +149,10 @@ export const fetchAllTabsInSession = async (accountName, onTabResult, tabKeysToF
 /**
  * Retry a single tab using an existing session.
  */
-export const retrySingleTab = async (accountName, tabKey, sessionId = null) => {
+export const retrySingleTab = async (accountName, tabKey, sessionId = null, bypassCache = false) => {
   const prompt = TAB_PROMPTS[tabKey](accountName);
-  const result = await queryAgent(prompt, sessionId);
+  const cacheKey = `${accountName}:${tabKey}`;
+  const result = await queryAgent(prompt, sessionId, 3, cacheKey, bypassCache);
   return result.output;
 };
 

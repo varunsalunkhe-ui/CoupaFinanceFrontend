@@ -7,12 +7,14 @@ const BQ_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
  * @param {string} customerName - e.g. "Casey's General Stores Inc."
  * @param {string} section - e.g. "hero"
  * @param {object} [options] - Optional settings
- * @param {boolean} [options.noCache] 
+ * @param {boolean} [options.noCache] - Also tells the backend to bypass/refresh
+ *   its server-side cache for this account+section (used by "Update Data").
  */
 export const fetchSection = async (customerName, section, { noCache = false } = {}) => {
   const params = { customer_name: customerName, section };
   if (noCache) {
     params._t = Date.now();
+    params.refresh = true;
   }
   const response = await axios.get(`${BQ_BASE_URL}/section`, {
     params,

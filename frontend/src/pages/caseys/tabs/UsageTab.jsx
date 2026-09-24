@@ -107,7 +107,7 @@ const formatAxisVal = (val) => {
 
 const getKpi = (kpis, key) => kpis?.find(k => k.key === key) || null;
 
-const UsageTab = ({ accountName, clientName }) => {
+const UsageTab = ({ accountName, clientName, forceRefresh = false }) => {
   const customerName = clientName || accountName;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -129,6 +129,7 @@ const UsageTab = ({ accountName, clientName }) => {
         customer_name: customerName,
         section: 'usage',
       });
+      if (forceRefresh) params.set('refresh', 'true');
       const response = await fetch(`${USAGE_API_BASE}/section?${params.toString()}`, {
         headers: { 'accept': 'application/json', 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
       });
@@ -143,7 +144,7 @@ const UsageTab = ({ accountName, clientName }) => {
     } finally {
       setLoading(false);
     }
-  }, [customerName, setExternalTabData]);
+  }, [customerName, setExternalTabData, forceRefresh]);
 
   useEffect(() => {
     fetchUsageData();
