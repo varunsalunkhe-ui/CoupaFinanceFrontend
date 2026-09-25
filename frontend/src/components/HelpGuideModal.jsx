@@ -163,7 +163,7 @@ const HelpGuideModal = ({ open, onClose }) => {
               <p className="mt-1 text-sm text-[#5A6180]">Send them in our team Slack channel anytime.</p>
             </div>
             <span className="shrink-0 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-semibold text-[#1D4ED8]">
-              #project-harvest-help
+              #account-intelligence-dashboard-help
             </span>
           </div>
 

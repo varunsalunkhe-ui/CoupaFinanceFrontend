@@ -18,16 +18,6 @@ const getInitials = (name) => {
     .join('');
 };
 
-const formatAcv = (val) => {
-  if (val === null || val === undefined || val === '') return null;
-  const num = Number(val);
-  if (Number.isNaN(num)) return null;
-  const abs = Math.abs(num);
-  if (abs >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
-  if (abs >= 1e3) return `$${(num / 1e3).toFixed(0)}K`;
-  return `$${num.toFixed(0)}`;
-};
-
 const HEAT_BADGE_STYLES = {
   successful: 'bg-emerald-100 text-emerald-700',
   healthy: 'bg-emerald-100 text-emerald-700',
@@ -344,9 +334,6 @@ const Home = () => {
                 {account.name}
               </h3>
               <p className="text-[12px] text-[#94A3B8]">Account Intelligence Dashboard</p>
-              {formatAcv(account.acv) && (
-                <p className="text-[13px] font-bold text-[#0369A1] mt-2">ACV: {formatAcv(account.acv)}</p>
-              )}
               <div className="mt-auto pt-5">
                 <div className="h-px bg-gray-100 mb-3" />
                 <div className="flex items-center justify-between gap-2">
@@ -360,8 +347,13 @@ const Home = () => {
                       <span className="text-[11px] text-[#94A3B8] font-medium">Active</span>
                     </span>
                   )}
-                  {account.rating !== null && account.rating !== undefined && (
-                    <span className="text-[11px] text-[#94A3B8]">Rating: <strong className="text-[#0F172A]">{account.rating}</strong></span>
+                  {account.cvmOwner && (
+                    <span
+                      className="text-[11px] text-[#94A3B8] inline-block max-w-[50%] truncate text-right"
+                      title={account.cvmOwner}
+                    >
+                      CVM Owner: <strong className="text-[#0369A1] font-semibold">{account.cvmOwner}</strong>
+                    </span>
                   )}
                 </div>
               </div>

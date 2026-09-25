@@ -94,40 +94,59 @@ export const downloadHtmlFile = (html, filename) => {
   URL.revokeObjectURL(url);
 };
 
-/** Reusable AI Agents section markup (stats + categories), shared by the tab-level and dashboard-wide reports. */
+const formatCreditsVal = (val) => {
+  const num = Number(val);
+  if (val === null || val === undefined || Number.isNaN(num)) return '—';
+  return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const AGENT_STATUS_BADGE_CLASS = {
+  'Enabled': 'style="background:#DCFCE7;color:#166534;"',
+  'Access But Unused': 'style="background:#FEF9C3;color:#854D0E;"',
+  'Disabled / Stalling': 'style="background:#FEE2E2;color:#991B1B;"',
+};
+
+/** Reusable AI Agents section markup (stats + agent studio + catalog), shared by the tab-level and dashboard-wide reports. */
 export const buildAgentsSectionMarkup = (agents) => {
   if (!agents) return '<p class="empty">No AI Agents data available.</p>';
   const summary = agents.summary;
-  const categories = agents.categories || [];
-  const unlockedPct = summary?.total_agents > 0
-    ? Math.round((summary.customer_accessible / summary.total_agents) * 100)
-    : 0;
+  const agentStudio = agents.agent_studio;
+  const catalog = agents.catalog || [];
 
   return `
     ${summary ? `<div class="stats">
-      <div class="stat-card"><div class="stat-label">Total Agents</div><div class="stat-value">${esc(summary.total_agents)}</div><div class="stat-sub">R43-R47 cumulative</div></div>
-      <div class="stat-card"><div class="stat-label">Customer Accessible</div><div class="stat-value">${esc(summary.customer_accessible)}</div><div class="stat-sub">${unlockedPct}% unlocked</div></div>
-      <div class="stat-card"><div class="stat-label">Currently Active</div><div class="stat-value">${esc(summary.currently_active)}</div><div class="stat-sub">Awaiting telemetry</div></div>
-      <div class="stat-card"><div class="stat-label">Volume (12 Mo)</div><div class="stat-value">${esc(summary.volume_12_mo)}</div><div class="stat-sub">Awaiting telemetry</div></div>
+      <div class="stat-card"><div class="stat-label">Total Agents &amp; GenAI Features</div><div class="stat-value">${esc(summary.total_agents)}</div><div class="stat-sub">Cumulative total</div></div>
+      <div class="stat-card"><div class="stat-label">Customer Accessible</div><div class="stat-value">${esc(summary.customer_accessible ?? summary.total_agents_accessible)}</div><div class="stat-sub">${summary.accessibility_pct != null ? `${esc(summary.accessibility_pct)}% unlocked` : ''}</div></div>
+      <div class="stat-card"><div class="stat-label">Navi Licenses Provisioned</div><div class="stat-value">${esc(summary.navi_licenses_total)}</div><div class="stat-sub">Prod ${esc(summary.navi_licenses_prd)} / Staging ${esc(summary.navi_licenses_stg)}</div></div>
+      <div class="stat-card"><div class="stat-label">Utilized Credits (Total)</div><div class="stat-value">${formatCreditsVal(summary.utilized_credits_total)}</div><div class="stat-sub">Prod ${formatCreditsVal(summary.utilized_credits_prd)} · Staging ${formatCreditsVal(summary.utilized_credits_stg)}</div></div>
+      <div class="stat-card"><div class="stat-label">Remaining Credit Balance</div><div class="stat-value">${formatCreditsVal(summary.remaining_balance_total)}</div><div class="stat-sub">Prod ${formatCreditsVal(summary.remaining_balance_prd)} · Staging ${formatCreditsVal(summary.remaining_balance_stg)}</div></div>
+      <div class="stat-card"><div class="stat-label">Free Credits Remaining</div><div class="stat-value">${formatCreditsVal(summary.free_credits_remaining)}</div><div class="stat-sub">Provisioned ${formatCreditsVal(summary.free_credits_provisioned)} · Consumed ${formatCreditsVal(summary.free_credits_consumed)}</div></div>
     </div>` : ''}
-    ${categories.map((cat) => `<div class="category">
-      <h3>${esc(cat.name)}</h3>
+    ${agentStudio ? `<div class="category">
+      <h3>Agent Studio</h3>
+      <hr class="category-divider"/>
+      <table><thead><tr><th>Type</th><th>Builds (Prod/Sand)</th><th>Unique Agents</th><th>Active Users (Prod/Sand)</th></tr></thead><tbody>
+        <tr><td>Custom Autonomous Agents</td><td>${esc(agentStudio.autonomous?.builds_prd)} / ${esc(agentStudio.autonomous?.builds_stg)}</td><td>${esc(agentStudio.autonomous?.unique_agents)}</td><td>${esc(agentStudio.autonomous?.users_prd)} / ${esc(agentStudio.autonomous?.users_stg)}</td></tr>
+        <tr><td>Custom Conversation Agents</td><td>${esc(agentStudio.conversational?.builds_prd)} / ${esc(agentStudio.conversational?.builds_stg)}</td><td>${esc(agentStudio.conversational?.unique_agents)}</td><td>${esc(agentStudio.conversational?.users_prd)} / ${esc(agentStudio.conversational?.users_stg)}</td></tr>
+      </tbody></table>
+    </div>` : ''}
+    <div class="category">
+      <h3>Agent Catalog</h3>
       <hr class="category-divider"/>
       <div class="agents-grid">
-        ${(cat.agents || []).map((agent) => `<div class="agent-card ${agent.accessible ? 'accessible' : 'locked'}">
+        ${catalog.map((agent) => `<div class="agent-card ${agent.status === 'Enabled' ? 'accessible' : 'locked'}">
           <div style="display:flex;align-items:start;justify-content:space-between;gap:8px;">
-            <span class="agent-name ${agent.accessible ? 'accessible' : 'locked'}">${esc(agent.name)}</span>
-            <span class="badge badge-status">${esc(agent.status || 'GA')}</span>
+            <span class="agent-name ${agent.status === 'Enabled' ? 'accessible' : 'locked'}">${esc(agent.agent)}</span>
+            <span class="badge badge-status" ${AGENT_STATUS_BADGE_CLASS[agent.status] || ''}>${esc(agent.status)}</span>
           </div>
-          ${agent.designation ? `<div style="margin-top:6px;"><span class="badge badge-${agent.designation.toLowerCase()}">${esc(agent.designation)}</span></div>` : ''}
-          ${agent.description ? `<p class="agent-desc">${esc(agent.description)}</p>` : ''}
+          ${agent.interaction_designation ? `<div style="margin-top:6px;"><span class="badge badge-${agent.interaction_designation.toLowerCase()}">${esc(agent.interaction_designation)}</span></div>` : ''}
+          ${agent.prerequisite_sku ? `<p class="agent-desc">Prerequisite: ${esc(agent.prerequisite_sku)}</p>` : ''}
           <div class="agent-bottom">
-            <span class="${agent.accessible ? 'pill-accessible' : 'pill-locked'}">${esc(agent.release || 'Base')}</span>
-            <span class="${agent.accessible ? 'access-yes' : 'access-no'}">${agent.accessible ? '✓ Accessible' : '🔒 ' + esc(agent.access_status || 'Requires SKU')}</span>
+            <span class="access-yes">Active Users: ${esc(agent.total_active_users)} (${esc(agent.active_users_prd)} Prod · ${esc(agent.active_users_stg)} Sandbox)</span>
           </div>
         </div>`).join('')}
       </div>
-    </div>`).join('')}
+    </div>
   `;
 };
 
