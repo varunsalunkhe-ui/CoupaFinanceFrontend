@@ -334,6 +334,11 @@ const Home = () => {
                 {account.name}
               </h3>
               <p className="text-[12px] text-[#94A3B8]">Account Intelligence Dashboard</p>
+              {account.accountOwner && (
+                <p className="text-[11px] text-[#94A3B8] mt-1 truncate" title={account.accountOwner}>
+                  Account Owner: <strong className="text-[#0369A1] font-semibold">{account.accountOwner}</strong>
+                </p>
+              )}
               <div className="mt-auto pt-5">
                 <div className="h-px bg-gray-100 mb-3" />
                 <div className="flex items-center justify-between gap-2">

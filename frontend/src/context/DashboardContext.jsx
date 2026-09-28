@@ -5,6 +5,23 @@ import { generateSessionId, buildConsolidatedPayload, isPayloadComplete, sendCon
 const DashboardContext = createContext(null);
 
 const TAB_KEYS = ['whitespace', 'ubp'];
+const LAST_REFRESHED_PREFIX = 'lastRefreshedAt_';
+
+const getStoredLastRefreshed = (accountName) => {
+  try {
+    return localStorage.getItem(LAST_REFRESHED_PREFIX + accountName) || null;
+  } catch {
+    return null;
+  }
+};
+
+const storeLastRefreshed = (accountName, isoString) => {
+  try {
+    localStorage.setItem(LAST_REFRESHED_PREFIX + accountName, isoString);
+  } catch {
+    // localStorage unavailable (e.g. private browsing) — timestamp just won't persist
+  }
+};
 
 // Module-level map to prevent duplicate fetches across StrictMode remounts
 const activeFetches = new Map();
@@ -26,6 +43,7 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
   // the last dependent call (the consolidated summary/plan generation) settles.
   const bypassCacheRef = useRef(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState(() => getStoredLastRefreshed(accountName));
 
   // ── Consolidated Data (Hero + 4 tabs, excl. Executive Summary & Action Plan) ──
   const [consolidatedSessionId, setConsolidatedSessionId] = useState(() => generateSessionId());
@@ -83,7 +101,7 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
     setTabErrors(prev => ({ ...prev, summary: null, plan: null }));
 
     sendConsolidatedData(consolidatedPayload, { bypassCache: bypassCacheRef.current })
-      .then(({ executiveSummary, actionPlan }) => {
+      .then(({ executiveSummary, actionPlan, backendTimestamp }) => {
         if (unmountedRef.current) return;
         if (executiveSummary) {
           setTabData(prev => ({ ...prev, summary: { cards: executiveSummary } }));
@@ -94,6 +112,12 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
           setTabData(prev => ({ ...prev, plan: actionPlan }));
         } else {
           setTabErrors(prev => ({ ...prev, plan: 'No action plan in response' }));
+        }
+        // Only backend-stamped time counts as "refreshed" — a cache hit still
+        // carries the original computation timestamp, not now.
+        if (backendTimestamp) {
+          storeLastRefreshed(accountName, backendTimestamp);
+          setLastRefreshed(backendTimestamp);
         }
       })
       .catch((err) => {
@@ -108,7 +132,7 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
           setRefreshing(false);
         }
       });
-  }, [consolidatedPayload]);
+  }, [consolidatedPayload, accountName]);
 
   useEffect(() => {
     unmountedRef.current = false;
@@ -296,7 +320,7 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
       tabData, tabLoading, tabErrors, tabSessions,
       loadAllTabs, fetchTab, retryTab, refreshAll,
       setExternalTabData, externalData, consolidatedPayload, consolidatedSessionId,
-      ubpEnabled, refreshing,
+      ubpEnabled, refreshing, lastRefreshed,
     }}>
       {children}
     </DashboardContext.Provider>

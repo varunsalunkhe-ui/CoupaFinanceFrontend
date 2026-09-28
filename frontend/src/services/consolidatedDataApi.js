@@ -83,6 +83,10 @@ export const sendConsolidatedData = async (payload, { bypassCache = false } = {}
     executiveSummary: parsed.executiveSummary || null,
     actionPlan: parsed.actionPlan || null,
     metadata: parsed.metadata || null,
+    // 'timestamp' is stamped by the backend when it actually computes the
+    // response — on a cache hit this is the original computation time, not
+    // now, so it reflects the true "last refreshed from backend" moment.
+    backendTimestamp: raw.timestamp || null,
     backendSessionId: raw.session_id || null,
   };
 };

@@ -73,7 +73,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
   const [refreshKey, setRefreshKey] = useState(0);
   const [downloadingPpt, setDownloadingPpt] = useState(false);
   const [helpGuideOpen, setHelpGuideOpen] = useState(false);
-  const { tabData, externalData, loadAllTabs, refreshAll, setExternalTabData, refreshing } = useDashboard();
+  const { tabData, externalData, loadAllTabs, refreshAll, setExternalTabData, refreshing, lastRefreshed } = useDashboard();
   const [showEntryOverlay, setShowEntryOverlay] = useState(true);
   const updateClickLockRef = useRef(false);
 
@@ -155,6 +155,15 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
       setDownloadingPpt(false);
     }
   }, [clientName]);
+
+  const formatLastRefreshed = (isoString) => {
+    if (!isoString) return null;
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) return null;
+    const isToday = date.toDateString() === new Date().toDateString();
+    const time = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    return isToday ? `Today at ${time}` : `${date.toLocaleDateString()} at ${time}`;
+  };
 
   const handleTabClick = (tabId) => {
     if (tabId === 'ubp' && !ubpRun) return;
@@ -244,20 +253,29 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
           <div className="flex items-baseline justify-between mb-4 pb-2 border-b-2 border-[#E4E7F1]">
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-bold text-[#0F1733]">Deep Dive</h2>
-              <div className="relative group">
-                <button
-                  onClick={handleDownloadDashboard}
-                  aria-label="Download HTML"
-                  className="flex items-center justify-center w-7 h-7 rounded-lg text-[#0369A1] bg-[#0369A1]/10 hover:bg-[#0369A1]/20 transition-colors cursor-pointer"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
+              <button
+                onClick={handleUpdateData}
+                disabled={refreshing}
+                title="Bypass cache and fetch the latest data for this account"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                {refreshing ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                   </svg>
-                </button>
-                <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 whitespace-nowrap rounded-md bg-[#0F1733] px-2.5 py-1.5 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  Download HTML
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                )}
+                {refreshing ? 'Updating...' : 'Update Data'}
+              </button>
+              {formatLastRefreshed(lastRefreshed) && (
+                <span className="text-xs text-[#64748B] whitespace-nowrap">
+                  Last refreshed: {formatLastRefreshed(lastRefreshed)}
                 </span>
-              </div>
+              )}
             </div>
             
             <div className="flex items-center gap-2">
@@ -299,24 +317,20 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                 Upload Document
               </button>
 
-              <button
-                onClick={handleUpdateData}
-                disabled={refreshing}
-                title="Bypass cache and fetch the latest data for this account"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-              >
-                {refreshing ? (
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                  </svg>
-                ) : (
+              <div className="relative group">
+                <button
+                  onClick={handleDownloadDashboard}
+                  aria-label="Download HTML"
+                  className="flex items-center justify-center w-7 h-7 rounded-lg text-[#0369A1] bg-[#0369A1]/10 hover:bg-[#0369A1]/20 transition-colors cursor-pointer"
+                >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
                   </svg>
-                )}
-                {refreshing ? 'Updating...' : 'Update Data'}
-              </button>
+                </button>
+                <span className="pointer-events-none absolute right-0 top-full mt-2 whitespace-nowrap rounded-md bg-[#0F1733] px-2.5 py-1.5 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  Download HTML
+                </span>
+              </div>
             </div>
           </div>
 
@@ -328,7 +342,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
                   disabled={isDisabledUbp}
-                  title={isDisabledUbp ? 'UBP conversion was not run for this account' : undefined}
+                  title={isDisabledUbp ? 'UBP Conversion is still under development for non-P2P customers.' : undefined}
                   className={`flex items-center gap-1.5 px-4 py-2.5 border-b-2 font-semibold text-sm whitespace-nowrap transition-all ${
                     isDisabledUbp
                       ? 'text-[#B0B7C3] border-transparent cursor-not-allowed opacity-60'
@@ -338,7 +352,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                   }`}
                 >
                   {tab.label}
-                  <InfoTooltip text={isDisabledUbp ? 'UBP conversion was not run for this account.' : tab.description} />
+                  <InfoTooltip text={isDisabledUbp ? 'UBP Conversion is still under development for non-P2P customers.' : tab.description} />
                 </button>
               );
             })}

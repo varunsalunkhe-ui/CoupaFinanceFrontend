@@ -17,16 +17,19 @@ const statusColors = {
 const WhitespaceTab = ({ accountName = 'caseys' }) => {
   const { data, loading, error, retry } = useTabFromContext('whitespace');
 
+  // Malformed/empty agent output (e.g. no Account Plan was uploaded for this
+  // account) — none of the expected sections are present.
+  const hasWhitespaceContent = data && (
+    data.portfolioSummary || data.landscapeColumns || data.platformCells ||
+    data.prioritizationFactors || data.expansionSequence || data.insights
+  );
+
   return (
     <>
-      <div className="mb-6 flex items-start gap-2.5 text-[12px] text-[#3A4A8A] bg-linear-to-r from-[#EEF2FF] to-[#F5F8FF] border border-[#C7D5F7] border-l-4 border-l-[#4A3DC7] rounded-lg px-4 py-2.5">
-        <svg className="w-4 h-4 mt-0.5 shrink-0 text-[#4A3DC7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>This tab is under development. Please upload an account plan to populate.</span>
-      </div>
-      <TabLoader loading={loading} error={error} onRetry={retry} data={data}>
-      {data && (
+      {/* Suppress TabLoader's generic "raw agent text" box (e.g. account-not-found
+          replies) — pass null so it falls through to our own children/fallback below. */}
+      <TabLoader loading={loading} error={error} onRetry={retry} data={data?.rawText ? null : data}>
+      {hasWhitespaceContent ? (
         <div >
           {/* Portfolio Summary */}
           {data.portfolioSummary && (
@@ -155,6 +158,13 @@ const WhitespaceTab = ({ accountName = 'caseys' }) => {
               </div>
             </>
           )}
+        </div>
+      ) : (
+        <div className="flex items-start gap-2.5 text-[12px] text-[#3A4A8A] bg-linear-to-r from-[#EEF2FF] to-[#F5F8FF] border border-[#C7D5F7] border-l-4 border-l-[#4A3DC7] rounded-lg px-4 py-2.5">
+          <svg className="w-4 h-4 mt-0.5 shrink-0 text-[#4A3DC7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Please upload an account plan to generate the Whitespace &amp; Risk tab.</span>
         </div>
       )}
       </TabLoader>

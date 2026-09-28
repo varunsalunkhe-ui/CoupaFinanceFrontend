@@ -126,7 +126,7 @@ const AIAgentsTab = ({ accountName, clientName, forceRefresh = false }) => {
               <p className="text-[12px] text-[#1E3A8A]">
                 <strong>Customer Instance Telemetry:</strong> This customer has more than one instance. Data displayed is consolidated across all active instances.
               </p>
-              <span className="shrink-0 text-[10px] font-bold px-2 py-1 rounded bg-[#0369A1] text-white ml-3">CONSOLIDATED VIEW</span>
+              
             </div>
           )}
 
