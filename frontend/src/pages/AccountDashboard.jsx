@@ -342,7 +342,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
                   disabled={isDisabledUbp}
-                  title={isDisabledUbp ? 'UBP Conversion is still under development for non-P2P customers.' : undefined}
+                  title={isDisabledUbp ? 'UBP Conversion is not applicable - this customer is either already on UBP or does not currently own a P2P product.' : undefined}
                   className={`flex items-center gap-1.5 px-4 py-2.5 border-b-2 font-semibold text-sm whitespace-nowrap transition-all ${
                     isDisabledUbp
                       ? 'text-[#B0B7C3] border-transparent cursor-not-allowed opacity-60'
@@ -352,7 +352,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                   }`}
                 >
                   {tab.label}
-                  <InfoTooltip text={isDisabledUbp ? 'UBP Conversion is still under development for non-P2P customers.' : tab.description} />
+                  <InfoTooltip text={isDisabledUbp ? 'UBP Conversion is not applicable - this customer is either already on UBP or does not currently own a P2P product.' : tab.description} />
                 </button>
               );
             })}

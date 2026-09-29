@@ -126,7 +126,6 @@ const AIAgentsTab = ({ accountName, clientName, forceRefresh = false }) => {
               <p className="text-[12px] text-[#1E3A8A]">
                 <strong>Customer Instance Telemetry:</strong> This customer has more than one instance. Data displayed is consolidated across all active instances.
               </p>
-              
             </div>
           )}
 
@@ -136,10 +135,22 @@ const AIAgentsTab = ({ accountName, clientName, forceRefresh = false }) => {
               <div className="bg-white border border-[#E5E7EB] rounded-xl px-5 py-4 relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-[#6353E9] to-[#00B8D9]" />
                 <div className="text-[11px] text-[#4B5563] uppercase tracking-wide font-semibold mt-1 mb-2">Total Agents & GenAI Features</div>
-                <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
-                  <div className="text-[32px] font-bold text-[#111827] leading-none">{formatNumber(summary.total_agents)}</div>
+                <div className="bg-[#F9FAFB] rounded-lg px-4 py-3 grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-[9px] text-[#6B7280] uppercase tracking-wide font-semibold mb-1">Navi AI Agents</div>
+                    <div className="text-[26px] font-bold text-[#111827] leading-none">{formatNumber(summary.total_navi_agents)}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-[#6B7280] uppercase tracking-wide font-semibold mb-1">GenAI Features</div>
+                    <div className="text-[26px] font-bold text-[#7C3AED] leading-none">{formatNumber(summary.total_genai_features)}</div>
+                  </div>
                 </div>
-                <div className="text-[12px] text-[#4B5563] mt-2">Cumulative total across Navi + GenAI catalog</div>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#E5E7EB] text-[11px] text-[#4B5563]">
+                  <span>Cumulative Total: <strong className="text-[#111827]">{formatNumber(summary.cumulative_total ?? summary.total_agents)}</strong></span>
+                  {(summary.total_ga_agents != null || summary.total_la_open_beta_agents != null) && (
+                    <span>{formatNumber(summary.total_ga_agents)} GA &bull; {formatNumber(summary.total_la_open_beta_agents)} LA</span>
+                  )}
+                </div>
               </div>
               <div className="bg-white border border-[#E5E7EB] rounded-xl px-5 py-4 relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-[4px] bg-[#0EA5E9]" />
@@ -296,9 +307,9 @@ const AIAgentsTab = ({ accountName, clientName, forceRefresh = false }) => {
                   </div>
 
                   <div className="text-[13px] text-[#374151] border-t border-[#E5E7EB] pt-2.5 flex items-center justify-between">
-                    <span className="font-semibold text-[#030405]">Active Unique Users:</span>
+                    <span className="font-semibold text-[#374151]">Active Unique Users:</span>
                     <span className="text-right">
-                      <strong className={`text-[11px] ${STATUS_USER_COLOR[agent.status] || 'text-[#111827]'}`}>
+                      <strong className={`font-bold ${STATUS_USER_COLOR[agent.status] || 'text-[#111827]'}`}>
                         {formatNumber(agent.active_users_prd)} Prod • {formatNumber(agent.active_users_stg)} Sandbox{isUntapped ? ' (Untapped Value)' : ''}
                       </strong>
                     </span>
