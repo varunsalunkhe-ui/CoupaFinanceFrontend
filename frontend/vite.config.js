@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://coupa-finance-backend-uat-945151735487.us-central1.run.app',
+        target: 'https://coupa-finance-backend-dev-945151735487.us-central1.run.app',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
