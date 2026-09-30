@@ -90,7 +90,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'Will the Account Intelligence Dashboard keep improving?',
-        a: 'Yes. The current release is the scalable foundation — it covers the core eight tabs and supports approximately 168 accounts. Scalability and improvements are planned for future updates.',
+        a: 'Yes. The current release is the scalable foundation — it covers the core eight tabs and supports approximately ~600 P2P accounts, >$500K ACV. Scalability and improvements are planned for future updates.',
       },
       {
         q: 'Are there plans to integrate the dashboard with other tools, like Salesforce or email?',

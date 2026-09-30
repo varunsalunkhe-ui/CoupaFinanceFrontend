@@ -3,8 +3,6 @@ import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { fetchClients, findClientBySlug } from '../services/clientsApi';
 import { fetchAccountFiles, deleteAccountFile, uploadAccountFile } from '../services/accountFilesApi';
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
-
 const getFileExtension = (name) => {
   const idx = name.lastIndexOf('.');
   return idx >= 0 ? name.slice(idx + 1).toUpperCase() : 'FILE';
@@ -20,6 +18,7 @@ const AccountFileManagerInner = ({ accountId, accountName, clientName, displayNa
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
   const fileInputRef = useRef(null);
 
   const loadFiles = useCallback(async () => {
@@ -59,16 +58,15 @@ const AccountFileManagerInner = ({ accountId, accountName, clientName, displayNa
   const handleUploadFiles = useCallback(async (fileList) => {
     const file = fileList?.[0];
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) {
-      setUploadError('File exceeds the 25MB limit.');
-      return;
-    }
     setUploadError(null);
     setUploading(true);
     try {
       const data = await uploadAccountFile(clientName, file);
       setFiles(data.files || []);
       setBucket(data.bucket || bucket);
+      // Marks that the dashboard must bypass its Redis cache on return so it
+      // re-runs the backend APIs against this newly uploaded file.
+      setUploaded(true);
     } catch (err) {
       console.error('[AccountFileManager] Failed to upload file:', err);
       setUploadError(err.response?.data?.detail || 'Failed to upload file.');
@@ -116,7 +114,7 @@ const AccountFileManagerInner = ({ accountId, accountName, clientName, displayNa
         <div className="flex items-center justify-between mb-6">
           <div>
             <button
-              onClick={() => navigate(`/${accountId}`, { state: { accountName, clientName } })}
+              onClick={() => navigate(`/${accountId}`, { state: { accountName, clientName, forceRefresh: uploaded } })}
               className="flex items-center gap-1.5 text-xs font-semibold text-[#0369A1] hover:text-[#075985] cursor-pointer uppercase tracking-wide"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -127,7 +125,7 @@ const AccountFileManagerInner = ({ accountId, accountName, clientName, displayNa
             <h1 className="text-2xl font-bold text-[#0F172A] mt-1">{clientName} — File Manager</h1>
           </div>
           <button
-            onClick={() => navigate(`/${accountId}`, { state: { accountName, clientName } })}
+            onClick={() => navigate(`/${accountId}`, { state: { accountName, clientName, forceRefresh: uploaded } })}
             className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors cursor-pointer shadow-sm"
           >
             Continue to Dashboard
@@ -238,7 +236,7 @@ const AccountFileManagerInner = ({ accountId, accountName, clientName, displayNa
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M12 12v9m0-9l-3 3m3-3l3 3" />
                   </svg>
                   <p className="text-sm font-medium text-[#0F172A] mt-3">Drag and drop file here</p>
-                  <p className="text-[11px] text-[#94A3B8] mt-1">Files up to 25MB</p>
+                  <p className="text-[11px] text-[#94A3B8] mt-1">Any file type or size</p>
                   <button
                     onClick={handleBrowseClick}
                     className="mt-4 px-4 py-2 text-xs font-semibold text-[#0369A1] bg-[#0369A1]/10 hover:bg-[#0369A1]/20 rounded-lg transition-colors cursor-pointer"

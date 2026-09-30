@@ -23,7 +23,7 @@ export const deleteAccountFile = async (accountName, fileName) => {
   const response = await axios.delete(`${API_BASE}/account-files`, {
     params: { account_name: accountName, file_name: fileName },
     headers: { Accept: '*/*' },
-    timeout: 30000,
+    timeout: 0,
   });
   return response.data;
 };
@@ -39,7 +39,9 @@ export const uploadAccountFile = async (accountName, file) => {
   const response = await axios.post(`${API_BASE}/account-files/upload`, formData, {
     params: { account_name: accountName },
     headers: { Accept: '*/*', 'Content-Type': 'multipart/form-data' },
-    timeout: 60000,
+    timeout: 0, // no client-side timeout — large files can take a while
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
   });
   return response.data;
 };

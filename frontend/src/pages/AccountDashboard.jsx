@@ -65,7 +65,7 @@ const TABS = [
 
 const PPT_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
-const AccountDashboardInner = ({ accountId, accountName, clientName, displayName, ubpRun }) => {
+const AccountDashboardInner = ({ accountId, accountName, clientName, displayName, ubpRun, initialForceRefresh }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('summary');
   const [heroData, setHeroData] = useState(null);
@@ -76,11 +76,24 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
   const { tabData, externalData, loadAllTabs, refreshAll, setExternalTabData, refreshing, lastRefreshed } = useDashboard();
   const [showEntryOverlay, setShowEntryOverlay] = useState(true);
   const updateClickLockRef = useRef(false);
+  const forceRefreshHandledRef = useRef(false);
 
 
   useEffect(() => {
     loadAllTabs();
   }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Arrived here right after a document upload — bypass the Redis cache once
+  // so tabs are recomputed against the newly uploaded file instead of stale data.
+  useEffect(() => {
+    if (!initialForceRefresh || forceRefreshHandledRef.current) return;
+    forceRefreshHandledRef.current = true;
+    updateClickLockRef.current = true;
+    refreshAll();
+    setHeroData(null);
+    setHeroLoading(true);
+    setRefreshKey((k) => k + 1);
+  }, [initialForceRefresh, refreshAll]);
 
   useEffect(() => {
     setShowEntryOverlay(true);
@@ -342,7 +355,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
                   disabled={isDisabledUbp}
-                  title={isDisabledUbp ? 'UBP Conversion is not applicable - this customer is either already on UBP or does not currently own a P2P product.' : undefined}
+                  title={isDisabledUbp ? 'UBP Conversion is still under development for non-P2P customers.' : undefined}
                   className={`flex items-center gap-1.5 px-4 py-2.5 border-b-2 font-semibold text-sm whitespace-nowrap transition-all ${
                     isDisabledUbp
                       ? 'text-[#B0B7C3] border-transparent cursor-not-allowed opacity-60'
@@ -352,7 +365,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                   }`}
                 >
                   {tab.label}
-                  <InfoTooltip text={isDisabledUbp ? 'UBP Conversion is not applicable - this customer is either already on UBP or does not currently own a P2P product.' : tab.description} />
+                  <InfoTooltip text={isDisabledUbp ? 'UBP Conversion is still under development for non-P2P customers.' : tab.description} />
                 </button>
               );
             })}
@@ -391,6 +404,7 @@ const AccountDashboard = () => {
           accountName: location.state.accountName,
           clientName: location.state.clientName,
            ubpRun: location.state.ubpRun !== false,
+           forceRefresh: location.state.forceRefresh === true,
         });
         setLoading(false);
         return;
@@ -437,6 +451,7 @@ const AccountDashboard = () => {
         clientName={clientInfo.clientName}
         displayName={clientInfo.clientName}
         ubpRun={clientInfo.ubpRun}
+        initialForceRefresh={clientInfo.forceRefresh}
       />
     </DashboardProvider>
   );
