@@ -106,48 +106,100 @@ const AGENT_STATUS_BADGE_CLASS = {
   'Disabled / Stalling': 'style="background:#FEE2E2;color:#991B1B;"',
 };
 
-/** Reusable AI Agents section markup (stats + agent studio + catalog), shared by the tab-level and dashboard-wide reports. */
+const AGENT_CARD_BORDER_COLOR = {
+  'Enabled': '#22C55E',
+  'Access But Unused': '#EAB308',
+  'Disabled / Stalling': '#E5E7EB',
+};
+
+const AGENT_STATUS_ACTION = {
+  'Enabled': 'Prerequisite: Verified',
+  'Access But Unused': 'Action Needed: Enable in Prod',
+  'Disabled / Stalling': 'Action Needed: Review Adoption',
+};
+
+const agentFormatK = (val) => {
+  const num = Number(val);
+  if (val === null || val === undefined || Number.isNaN(num)) return '\u2014';
+  return num >= 1000 ? `${(num / 1000).toFixed(num % 1000 === 0 ? 0 : 1)}K` : String(num);
+};
+
+/** Reusable AI Agents section markup (summary + agent studio + catalog), shared by the tab-level and dashboard-wide reports. Mirrors AIAgentsTab.jsx field-for-field. */
 export const buildAgentsSectionMarkup = (agents) => {
   if (!agents) return '<p class="empty">No AI Agents data available.</p>';
   const summary = agents.summary;
   const agentStudio = agents.agent_studio;
   const catalog = agents.catalog || [];
 
-  return `
-    ${summary ? `<div class="stats">
-      <div class="stat-card"><div class="stat-label">Total Agents &amp; GenAI Features</div><div class="stat-value">${esc(summary.total_agents)}</div><div class="stat-sub">Cumulative total</div></div>
+  let html = '';
+
+  if (summary?.is_multi_instance) {
+    html += `<p style="font-size:12px;color:#1E3A8A;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:8px 14px;margin-bottom:12px;"><strong>Customer Instance Telemetry:</strong> This customer has more than one instance. Data displayed is consolidated across all active instances.</p>`;
+  }
+
+  if (summary) {
+    html += `<h3 style="margin-top:0;">Agent &amp; Credit Summary</h3>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Total Agents &amp; GenAI Features</div>
+        <div class="stat-value">${esc(summary.total_navi_agents)} Navi Agents / <span style="color:#7C3AED;">${esc(summary.total_genai_features)} GenAI</span></div>
+        <div class="stat-sub">Cumulative total: ${esc(summary.cumulative_total ?? summary.total_agents)}${(summary.total_ga_agents != null || summary.total_la_open_beta_agents != null) ? ` &bull; ${esc(summary.total_ga_agents)} GA &bull; ${esc(summary.total_la_open_beta_agents)} LA` : ''}</div>
+      </div>
       <div class="stat-card"><div class="stat-label">Customer Accessible</div><div class="stat-value">${esc(summary.customer_accessible ?? summary.total_agents_accessible)}</div><div class="stat-sub">${summary.accessibility_pct != null ? `${esc(summary.accessibility_pct)}% unlocked` : ''}</div></div>
-      <div class="stat-card"><div class="stat-label">Navi Licenses Provisioned</div><div class="stat-value">${esc(summary.navi_licenses_total)}</div><div class="stat-sub">Prod ${esc(summary.navi_licenses_prd)} / Staging ${esc(summary.navi_licenses_stg)}</div></div>
+      <div class="stat-card"><div class="stat-label">Navi Licenses Provisioned</div><div class="stat-value">${esc(summary.navi_licenses_total)}</div><div class="stat-sub">Environment Allocation: ${esc(summary.navi_licenses_prd)} PRD / ${esc(summary.navi_licenses_stg)} STG</div></div>
       <div class="stat-card"><div class="stat-label">Utilized Credits (Total)</div><div class="stat-value">${formatCreditsVal(summary.utilized_credits_total)}</div><div class="stat-sub">Prod ${formatCreditsVal(summary.utilized_credits_prd)} · Staging ${formatCreditsVal(summary.utilized_credits_stg)}</div></div>
       <div class="stat-card"><div class="stat-label">Remaining Credit Balance</div><div class="stat-value">${formatCreditsVal(summary.remaining_balance_total)}</div><div class="stat-sub">Prod ${formatCreditsVal(summary.remaining_balance_prd)} · Staging ${formatCreditsVal(summary.remaining_balance_stg)}</div></div>
-      <div class="stat-card"><div class="stat-label">Free Credits Remaining</div><div class="stat-value">${formatCreditsVal(summary.free_credits_remaining)}</div><div class="stat-sub">Provisioned ${formatCreditsVal(summary.free_credits_provisioned)} · Consumed ${formatCreditsVal(summary.free_credits_consumed)}</div></div>
-    </div>` : ''}
-    ${agentStudio ? `<div class="category">
-      <h3>Agent Studio</h3>
+      <div class="stat-card"><div class="stat-label">Free Credits Tracking (${agentFormatK(summary.free_credits_provisioned)} Default)</div><div class="stat-value">${formatCreditsVal(summary.free_credits_remaining)} left</div><div class="stat-sub">Provisioned ${formatCreditsVal(summary.free_credits_provisioned)} · Consumed ${formatCreditsVal(summary.free_credits_consumed)}</div></div>
+    </div>
+    <p style="font-size:12px;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 14px;margin-top:8px;"><strong>\u23f3 Predictive Burn-Down:</strong> ${summary.estimated_months_remaining != null ? `Estimated exhaustion in ${esc(summary.estimated_months_remaining)} months` : 'Not enough usage history yet to forecast credit exhaustion timeline.'}</p>`;
+  }
+
+  if (agentStudio) {
+    html += `<div class="category">
+      <h3>Navi Agents & GenAI Features: Agent Studio</h3>
       <hr class="category-divider"/>
-      <table><thead><tr><th>Type</th><th>Builds (Prod/Sand)</th><th>Unique Agents</th><th>Active Users (Prod/Sand)</th></tr></thead><tbody>
-        <tr><td>Custom Autonomous Agents</td><td>${esc(agentStudio.autonomous?.builds_prd)} / ${esc(agentStudio.autonomous?.builds_stg)}</td><td>${esc(agentStudio.autonomous?.unique_agents)}</td><td>${esc(agentStudio.autonomous?.users_prd)} / ${esc(agentStudio.autonomous?.users_stg)}</td></tr>
-        <tr><td>Custom Conversation Agents</td><td>${esc(agentStudio.conversational?.builds_prd)} / ${esc(agentStudio.conversational?.builds_stg)}</td><td>${esc(agentStudio.conversational?.unique_agents)}</td><td>${esc(agentStudio.conversational?.users_prd)} / ${esc(agentStudio.conversational?.users_stg)}</td></tr>
+      <table><thead><tr><th>Type</th><th>Custom Builds (Prod/Sand)</th><th>Unique Agents</th><th>Active Users (Prod/Sand)</th></tr></thead><tbody>
+        <tr><td>Custom Autonomous Agents (scheduled workflows / background reconciliations)</td><td>${esc(agentStudio.autonomous?.builds_prd)} / ${esc(agentStudio.autonomous?.builds_stg)}</td><td>${esc(agentStudio.autonomous?.unique_agents)}</td><td>${esc(agentStudio.autonomous?.users_prd)} / ${esc(agentStudio.autonomous?.users_stg)}</td></tr>
+        <tr><td>Custom Conversation Agents (policy lookup, advisory chat, guided intake Q&amp;A)</td><td>${esc(agentStudio.conversational?.builds_prd)} / ${esc(agentStudio.conversational?.builds_stg)}</td><td>${esc(agentStudio.conversational?.unique_agents)}</td><td>${esc(agentStudio.conversational?.users_prd)} / ${esc(agentStudio.conversational?.users_stg)}</td></tr>
       </tbody></table>
-    </div>` : ''}
-    <div class="category">
-      <h3>Agent Catalog</h3>
+    </div>`;
+  }
+
+  html += `<div class="category">
+      <h3>Navi Agents & GenAI Features Catalog</h3>
+      <p class="section-sub">ACT: the agent does the work &bull; ASSIST: the agent helps the user &bull; ADVISE: the agent advises the user</p>
       <hr class="category-divider"/>
-      <div class="agents-grid">
-        ${catalog.map((agent) => `<div class="agent-card ${agent.status === 'Enabled' ? 'accessible' : 'locked'}">
+      <div class="agents-grid" style="grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));">
+        ${catalog.map((agent) => {
+          const isUntapped = agent.status === 'Access But Unused' && agent.total_active_users === 0;
+          const docUrls = (agent.ssot_docs_url || '').split(',').map((u) => u.trim()).filter(Boolean);
+          return `<div class="agent-card" style="border-left-color:${AGENT_CARD_BORDER_COLOR[agent.status] || '#E5E7EB'};background:#fff;border:1px solid #E5E7EB;border-left-width:4px;">
           <div style="display:flex;align-items:start;justify-content:space-between;gap:8px;">
-            <span class="agent-name ${agent.status === 'Enabled' ? 'accessible' : 'locked'}">${esc(agent.agent)}</span>
+            <span class="agent-name accessible">${esc(agent.agent)}</span>
             <span class="badge badge-status" ${AGENT_STATUS_BADGE_CLASS[agent.status] || ''}>${esc(agent.status)}</span>
           </div>
-          ${agent.interaction_designation ? `<div style="margin-top:6px;"><span class="badge badge-${agent.interaction_designation.toLowerCase()}">${esc(agent.interaction_designation)}</span></div>` : ''}
-          ${agent.prerequisite_sku ? `<p class="agent-desc">Prerequisite: ${esc(agent.prerequisite_sku)}</p>` : ''}
-          <div class="agent-bottom">
-            <span class="access-yes">Active Users: ${esc(agent.total_active_users)} (${esc(agent.active_users_prd)} Prod · ${esc(agent.active_users_stg)} Sandbox)</span>
+          <div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            ${agent.interaction_designation ? `<span class="badge badge-${agent.interaction_designation.toLowerCase()}">${esc(agent.interaction_designation)}</span>` : ''}
+            ${agent.prerequisite_sku ? `<span style="font-size:11px;font-style:italic;color:#030405;">Prerequisite: ${esc(agent.prerequisite_sku)}</span>` : ''}
           </div>
-        </div>`).join('')}
+          <div style="font-size:12px;color:#374151;border-top:1px solid #E5E7EB;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;">
+            <span>Active Unique Users:</span>
+            <strong>${esc(agent.active_users_prd)} Prod &bull; ${esc(agent.active_users_stg)} Sandbox${isUntapped ? ' (Untapped Value)' : ''}</strong>
+          </div>
+          <div style="background:#F9FAFB;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:11px;">
+            <div style="display:flex;justify-content:space-between;"><span>Prod Burn:</span><span>${formatCreditsVal(agent.burn_metered_prd)} Met | ${formatCreditsVal(agent.burn_unmetered_prd)} Unmet | <strong>${formatCreditsVal(agent.burn_total_prd)} Total</strong></span></div>
+            <div style="display:flex;justify-content:space-between;margin-top:3px;"><span>Sandbox Burn:</span><span>${formatCreditsVal(agent.burn_metered_stg)} Met | ${formatCreditsVal(agent.burn_unmetered_stg)} Unmet | <strong>${formatCreditsVal(agent.burn_total_stg)} Total</strong></span></div>
+          </div>
+          <div class="agent-bottom">
+            ${AGENT_STATUS_ACTION[agent.status] ? `<span style="font-size:11px;">${esc(AGENT_STATUS_ACTION[agent.status])}</span>` : '<span></span>'}
+            ${docUrls.length ? `<span>${docUrls.map((url, di) => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#0369A1;margin-left:8px;">SSOT Doc${docUrls.length > 1 ? ` ${di + 1}` : ''} \u2197</a>`).join('')}</span>` : ''}
+          </div>
+        </div>`;
+        }).join('')}
       </div>
-    </div>
-  `;
+    </div>`;
+
+  return html;
 };
 
 /** Standalone single-tab AI Agents report (used by AIAgentsTab's "Download Report" button). */
@@ -188,15 +240,27 @@ const SUMMARY_CARD_ORDER = [
   { key: 'concerns', title: '⚠ Concerns', render: (d) => (d.items || []).map((i) => `<li><strong>${esc(i.title)}:</strong> ${esc(i.description)}</li>`).join('') },
   { key: 'valueDelivered', title: '$ Value Delivered', render: (d) => (d.items || []).map((i) => `<li><strong>${esc(i.category)}:</strong> ${esc(i.value)}</li>`).join('') },
   { key: 'topExpansionPriorities', title: '◆ Top Expansion Priorities', render: (d) => (d.items || []).map((i) => `<li><strong>${esc(i.module)}:</strong> ${esc(i.rationale)}</li>`).join('') },
-  { key: 'adoptionWins', title: '✓ Adoption Wins', render: (d) => (d.items || []).map((i) => `<li><strong>${esc(i.title)}:</strong> ${esc(i.metric)}</li>`).join('') },
+  {
+    key: 'adoptionWins',
+    title: '✓ Adoption Wins',
+    render: (d) => {
+      const stats = d.utilizationStats;
+      const statsHtml = stats ? `<li style="list-style:none;margin-left:-18px;margin-bottom:6px;"><span style="background:#ECFDF5;color:#15803D;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;">Users: ${esc(stats.activeUsers)} / ${esc(stats.totalUsers)} (${esc(stats.utilizationPercent)})</span></li>` : '';
+      return statsHtml + (d.items || []).map((i) => `<li><strong>${esc(i.title)}:</strong> ${esc(i.metric)}</li>`).join('');
+    },
+  },
   { key: 'benchmarkMethodology', title: '⊙ Benchmarks & Methodology', render: (d) => (d.items || []).map((i) => `<li><strong>${esc(i.name)}:</strong> ${esc(i.customerValue)}${i.industryBenchmark ? ` (benchmark: ${esc(i.industryBenchmark)})` : ''}</li>`).join('') },
 ];
 
 const buildSummaryMarkup = (summary) => {
   const cards = summary?.cards;
   if (!cards) return '<p class="empty">No Executive Summary data available.</p>';
+  // Newer cards (accountObjectives/processPainPoints/competitiveLandscape/additionalInsights) are
+  // optional — only render them when they actually carry items (mirrors SummaryTab.jsx's hasItems guard).
+  const hasItems = (card) => card && Array.isArray(card.items) && card.items.length > 0;
+  const OPTIONAL_KEYS = ['accountObjectives', 'processPainPoints', 'competitiveLandscape', 'additionalInsights'];
   return `<div class="card-grid">
-    ${SUMMARY_CARD_ORDER.filter((c) => cards[c.key]).map((c) => `<div class="card">
+    ${SUMMARY_CARD_ORDER.filter((c) => cards[c.key] && (!OPTIONAL_KEYS.includes(c.key) || hasItems(cards[c.key]))).map((c) => `<div class="card">
       <h4>${c.title}</h4>
       ${cards[c.key].summary ? `<p class="section-sub">${esc(cards[c.key].summary)}</p>` : ''}
       ${c.key === 'valueDelivered' ? `<p style="font-size:12px;margin-bottom:6px;"><strong>Total Value:</strong> ${esc(cards[c.key].totalValue)} &nbsp; <strong>ROI:</strong> ${esc(cards[c.key].roiMultiple)}</p>` : ''}
@@ -205,52 +269,96 @@ const buildSummaryMarkup = (summary) => {
   </div>`;
 };
 
+const snapParseNum = (val) => {
+  if (val === null || val === undefined || val === 'NA') return null;
+  if (typeof val === 'number') return Number.isFinite(val) ? val : null;
+  const cleaned = String(val).replace(/[^0-9.-]/g, '');
+  if (!cleaned) return null;
+  const parsed = Number(cleaned);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+const snapFormatDays = (val) => (val === null || val === undefined || val === 'NA') ? '—' : `${val} days`;
+const snapFormatDayReduction = (val) => {
+  if (val === null || val === undefined || val === '' || val === 'NA') return '—';
+  if (typeof val === 'string') return `${val} day reduction`;
+  const num = Number(val);
+  if (!Number.isFinite(num)) return '—';
+  return `${Math.round(num * 100) / 100} day reduction`;
+};
+const snapFormatPercent = (val) => (val === null || val === undefined || val === 'NA') ? '—' : `${Number(val).toFixed(0)}%`;
+const snapFormatPercent1 = (val) => { const n = snapParseNum(val); return n === null ? '—' : `${n.toFixed(1)}%`; };
+
+/** Value Realized rows — mirrors the static table structure in SnapshotTab.jsx Section 4. */
+const buildValueRealizedRows = (d) => [
+  { solution: 'AP Automation', driver: 'Generate Rebates through Card Payments', product: 'Virtual Cards', value: formatCurrency(d.Generate_Rebates_through_Card_Payments), formula: 'sum(Vcard transactions) × 0.02', benchmark: '', dim: false },
+  { solution: 'AP Automation', driver: 'Reduce Invoice Processing Costs', product: 'InvoiceSmash / Invoicing', value: formatCurrency(d.Reduce_Invoice_Processing_Costs), formula: 'Sum(invoice savings)', benchmark: '', dim: false },
+  { solution: 'AP Automation', driver: 'Reduce Time & Effort to process invoices', product: 'Invoice Smash / Invoicing / Rossum', value: snapFormatDayReduction(d.Reduce_Time_and_Effort_to_process_invoices), formula: 'Benchmark Cycle Time − Current Year invoice cycle time', benchmark: '18.3 days from ingestion to processed', dim: false },
+  { solution: 'AP Automation', driver: 'Savings Generated with Early Payment Discounts', product: 'Early Pay Discounts', value: formatCurrency(d.Savings_Generated_with_Early_Payment_Discounts), formula: 'sum(invoiced paid where EPD flagged/captured)', benchmark: '', dim: false },
+  { solution: 'Platform', driver: 'Increase Savings Capture Rate by improving On-Contract Spend', product: 'Smart Intake & Orchestration', value: formatCurrency(d['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Smart_Intake_and_Orchestration']), formula: '(PO Spend × On-Contract% − 20%) × 0.04 + (PO Spend × Off-Contracts% − 20%) × 0.04 × 0.15', benchmark: '20% spend on contract', dim: snapParseNum(d['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Smart_Intake_and_Orchestration']) == null },
+  { solution: 'Platform', driver: 'PO Processing Efficiency', product: 'Smart Intake & Orchestration', value: snapFormatDayReduction(d.PO_Processing_Efficiency_smart_intake_and_orchestration), formula: 'Benchmark Cycletime − CY Requisition Cycle Time', benchmark: '6−7 business days', dim: !d.PO_Processing_Efficiency_smart_intake_and_orchestration },
+  { solution: 'Procure to Pay', driver: 'Increase Savings Capture Rate by improving On-Contract Spend', product: 'Core Procurement', value: formatCurrency(d['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Core_Procurement']), formula: d['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Core_Procurement_formula'] || '', benchmark: '20% spend on contract', dim: false },
+  { solution: 'Procure to Pay', driver: 'PO Processing Efficiency', product: 'Core Procurement', value: snapFormatDayReduction(d.PO_Processing_Efficiency_Core_Procurement), formula: 'Benchmark Cycle time − CY Requisition Cycle Time', benchmark: '6−7 business days', dim: !d.PO_Processing_Efficiency_Core_Procurement },
+  { solution: 'Strategic Sourcing', driver: 'Increase Spend On Contract Through More Sourcing Activities', product: 'Coupa Sourcing / Coupa Sourcing Optimization', value: d.Increase_Spend_On_Contract_Through_More_Sourcing_Activities === 'NA' || d.Increase_Spend_On_Contract_Through_More_Sourcing_Activities == null ? '—' : formatCurrency(d.Increase_Spend_On_Contract_Through_More_Sourcing_Activities), formula: '(current year sourced spend % − benchmark sourced spend%) × sourced spend × 0.04%', benchmark: '15% of spend sourced annually', dim: d.Increase_Spend_On_Contract_Through_More_Sourcing_Activities === 'NA' || d.Increase_Spend_On_Contract_Through_More_Sourcing_Activities == null },
+  { solution: 'Strategic Sourcing', driver: 'Total Sourcing Savings', product: 'Coupa Sourcing / Coupa Sourcing Optimization', value: d.Total_Sourcing_Savings === 'NA' || d.Total_Sourcing_Savings == null ? '—' : formatCurrency(d.Total_Sourcing_Savings), formula: 'Current year sourced spend × 0.04%', benchmark: '', dim: d.Total_Sourcing_Savings === 'NA' || d.Total_Sourcing_Savings == null },
+  { solution: 'Supplier Information & Risk Management', driver: 'Reduce time to manage supplier information', product: 'Risk Assess (RPMA) / Risk Aware (RPM)', value: '—', formula: 'CY Onboarded suppliers × (Benchmark onboard cycle time − CY onboard cycle time in weeks)', benchmark: '15−35 business days', dim: true },
+];
+
 const buildSnapshotMarkup = (snapshot) => {
   if (!snapshot) return '<p class="empty">No Value Snapshot data available.</p>';
+  const d = snapshot;
 
-  const spendRows = [
-    ['Coupa PO Spend', snapshot.po_spend],
-    ['Non-PO Invoice Spend', snapshot.Non_PO_Invoice_Spend],
-    ['External PO-based Invoice Spend', snapshot.External_PO_based_Invoice_Spend],
-    ['Total Coupa Spend', snapshot.total_coupa_spend],
-    ['Total Addressable Spend (Est.)', snapshot.total_addressable_spend],
-  ];
+  const poSpend = snapParseNum(d.po_spend) || 0;
+  const nonPoInvoiceSpend = snapParseNum(d.Non_PO_Invoice_Spend) || 0;
+  const externalPoInvoiceSpend = snapParseNum(d.External_PO_based_Invoice_Spend) || 0;
+  const totalCoupaSpend = snapParseNum(d.total_coupa_spend) || (poSpend + nonPoInvoiceSpend + externalPoInvoiceSpend);
+  const poShare = totalCoupaSpend > 0 ? (poSpend / totalCoupaSpend) * 100 : 0;
+  const externalPoInvoiceShare = totalCoupaSpend > 0 ? (externalPoInvoiceSpend / totalCoupaSpend) * 100 : 0;
+  const nonPoInvoiceShare = totalCoupaSpend > 0 ? (nonPoInvoiceSpend / totalCoupaSpend) * 100 : 0;
 
-  const kpiRows = [
-    ['On-Contract Savings Capture', snapshot.Spend_Under_Contract_Savings_Capture],
-    ['Requisition (PR-to-PO) Cycle Time (days)', snapshot.PR_to_PO_Cycle_Time],
-    ['First Time Match Rate', snapshot.First_Time_Match_Rate],
-    ['Total Contracts', snapshot.Total_Contracts],
-    ['Total Sourcing Projects', snapshot.Total_Sourcing_Projects],
-  ];
+  // ─── Section 1 · Spend Data ───
+  let html = `<p class="section-sub">Section 1 · UBP Measured Spend Data</p>
+  <div class="stats">
+    <div class="stat-card"><div class="stat-label">Coupa PO Spend</div><div class="stat-value">${formatCurrency(d.po_spend)}</div><div class="stat-sub">${esc(d.po_spend_text || '')}</div></div>
+    <div class="stat-card"><div class="stat-label">Non-PO Invoice Spend</div><div class="stat-value">${formatCurrency(d.Non_PO_Invoice_Spend)}</div><div class="stat-sub">${esc(d.Non_PO_Invoice_Spend_text || '')}</div></div>
+    <div class="stat-card"><div class="stat-label">External PO-based Invoice Spend</div><div class="stat-value">${formatCurrency(d.External_PO_based_Invoice_Spend)}</div><div class="stat-sub">${esc(d.External_PO_based_Invoice_Spend_text || '')}</div></div>
+    <div class="stat-card" style="background:#0F172A;border-color:#0F172A;"><div class="stat-label" style="color:#B9CBEF;">Composition of Total UBP Measured Spend</div><div class="stat-value" style="color:#fff;">${formatCurrency(d.total_coupa_spend)}</div><div class="stat-sub" style="color:#CFDDF6;">Coupa PO Spend + Non-PO Invoice Spend + External PO-based Invoice Spend</div></div>
+    <div class="stat-card"><div class="stat-label">Total Addressable Spend (Est.)</div><div class="stat-value">${d.total_addressable_spend === 'NA' ? '~$4.5B' : formatCurrency(d.total_addressable_spend)}</div><div class="stat-sub">Confirm with finance</div></div>
+  </div>
+  <table style="margin-top:10px;"><thead><tr><th>Composition of Total UBP Measured Spend</th><th>Share</th><th>Amount</th></tr></thead><tbody>
+    <tr><td>Coupa PO Spend</td><td>${poShare.toFixed(1)}%</td><td>${formatCurrency(poSpend)}</td></tr>
+    <tr><td>External PO-based Invoice Spend</td><td>${externalPoInvoiceShare.toFixed(1)}%</td><td>${formatCurrency(externalPoInvoiceSpend)}</td></tr>
+    <tr><td>Non-PO Invoice Spend</td><td>${nonPoInvoiceShare.toFixed(1)}%</td><td>${formatCurrency(nonPoInvoiceSpend)}</td></tr>
+  </tbody></table>`;
 
-  const payRows = [
-    ['Spend Thru Coupa Pay', snapshot.Spend_Thru_Coupa_Pay],
-    ['VCard On PO Volume', snapshot.VCard_On_PO_Volume],
-    ['VCard On Invoice Volume', snapshot.VCard_On_Invoice_Volume],
-    ['VCard Volume', snapshot.VCard_Volume],
-    ['EPD Rebates', snapshot.EPD_Rebates],
-  ];
+  // ─── Section 2 · Value Metrics (KPIs) ───
+  html += `<p class="section-sub" style="margin-top:20px;">Section 2 · Value Metrics (KPIs)</p>
+  <table><thead><tr><th>Category</th><th>Metric</th><th>Value</th><th>Detail</th></tr></thead><tbody>
+    <tr><td>Procurement</td><td>On-Contract Savings</td><td>${formatCurrency(d.Spend_Under_Contract_Savings_Capture)}</td><td>${esc(d.Spend_Under_Contract_Savings_Capture_text || '')}</td></tr>
+    <tr><td>Procurement</td><td>Requisition Cycle Time</td><td>${snapFormatDays(d.PR_to_PO_Cycle_Time)}</td><td>${esc(d.PR_to_PO_Cycle_Time_text || '')}</td></tr>
+    <tr><td>Invoicing</td><td>First Time Match Rate</td><td>${snapFormatPercent(d.First_Time_Match_Rate)}</td><td>${esc(d.First_Time_Match_Rate_text || '')}</td></tr>
+    <tr><td>Contracts & Sourcing</td><td>Total Contracts (incl. active contracts)</td><td>${esc(d.Total_Contracts)}</td><td>${esc(d.Total_Contracts_text || '')}</td></tr>
+    <tr><td>Contracts & Sourcing</td><td>Total Number of Sourcing Events (incl. non-completed)</td><td>${esc(d.Total_Sourcing_Projects)}</td><td>${esc(d.Total_Sourcing_Projects_text || '')}</td></tr>
+  </tbody></table>`;
 
-  const valueRows = [
-    ['Generate Rebates through Card Payments', snapshot.Generate_Rebates_through_Card_Payments],
-    ['Reduce Invoice Processing Costs', snapshot.Reduce_Invoice_Processing_Costs],
-    ['Savings Generated with Early Payment Discounts', snapshot.Savings_Generated_with_Early_Payment_Discounts],
-    ['Increase Savings Capture Rate (Smart Intake & Orchestration)', snapshot['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Smart_Intake_and_Orchestration']],
-    ['Increase Savings Capture Rate (Core Procurement)', snapshot['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Core_Procurement']],
-    ['Increase Spend On Contract Through More Sourcing Activities', snapshot.Increase_Spend_On_Contract_Through_More_Sourcing_Activities],
-    ['Total Sourcing Savings', snapshot.Total_Sourcing_Savings],
-  ];
+  // ─── Section 3 · Coupa Pay Performance ───
+  html += `<p class="section-sub" style="margin-top:20px;">Section 3 · Coupa Pay Performance</p>
+  <table><thead><tr><th>Payment Channel</th><th>Total Volume</th><th>% of Invoice Volume</th><th>Revenue Share</th></tr></thead><tbody>
+    <tr><td>Digital Payment</td><td>${formatCurrency(d.Digital_Payment_Volume)}</td><td>${snapFormatPercent1(d.Digital_Payment_Volume_pct_of_invoice_volume)}</td><td>${formatCurrency(d.Digital_Payment_Revenue_Share)}</td></tr>
+    <tr><td>Virtual Card</td><td>${formatCurrency(d.VCard_Volume)}</td><td>${snapFormatPercent1(d.VCard_Volume_pct_of_invoice_volume)}</td><td>${formatCurrency(d.VCard_Revenue_Share)}</td></tr>
+    <tr><td>EPD (Early Pay Discounts)</td><td>${formatCurrency(d.Early_Pay_Discounts_Captured)}</td><td>${snapFormatPercent1(d.Early_Pay_Discounts_Captured_pct_of_invoice_volume)}</td><td>${formatCurrency(d.EPD_Revenue_Share)}</td></tr>
+  </tbody></table>`;
 
-  const renderTable = (title, rows) => `<p class="section-sub" style="margin-top:12px;">${esc(title)}</p>
-    <table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>
-      ${rows.map(([label, val]) => `<tr><td>${esc(label)}</td><td>${formatCurrency(val)}</td></tr>`).join('')}
-    </tbody></table>`;
+  // ─── Section 4 · Value Realized ───
+  const totalValueRealized = ['Generate_Rebates_through_Card_Payments', 'Reduce_Invoice_Processing_Costs', 'Savings_Generated_with_Early_Payment_Discounts', 'Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Smart_Intake_and_Orchestration', 'Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Core_Procurement', 'Increase_Spend_On_Contract_Through_More_Sourcing_Activities', 'Total_Sourcing_Savings']
+    .reduce((sum, key) => sum + (typeof d[key] === 'number' ? d[key] : 0), 0);
+  const valueRows = buildValueRealizedRows(d);
+  html += `<p class="section-sub" style="margin-top:20px;">Section 4 · Value Realized — Value Decomposition (Conversation-Ready Detail)</p>
+  <p style="font-size:15px;font-weight:700;color:#4A3DC7;margin-bottom:8px;">Total Value Realized: ${formatCurrency(totalValueRealized)}</p>
+  <table><thead><tr><th>T1-Solution</th><th>Value Driver</th><th>T2-Products</th><th>Value</th><th>Calculation Logic</th><th>Benchmark</th></tr></thead><tbody>
+    ${valueRows.map((r) => `<tr${r.dim ? ' style="opacity:.5;"' : ''}><td>${esc(r.solution)}</td><td>${esc(r.driver)}</td><td>${esc(r.product)}</td><td><strong>${esc(r.value)}</strong></td><td style="font-size:11px;">${esc(r.formula)}</td><td style="font-size:11px;">${esc(r.benchmark)}</td></tr>`).join('')}
+  </tbody></table>`;
 
-  return renderTable('Spend Data', spendRows)
-    + renderTable('Value Metrics (KPIs)', kpiRows)
-    + renderTable('Coupa Pay Performance', payRows)
-    + renderTable('Value Realized', valueRows);
+  return html;
 };
 
 const buildPortfolioGroupMarkup = (group, badgeClass) => {
@@ -304,26 +412,31 @@ const buildWhitespaceMarkup = (data) => {
   if (!data) return '<p class="empty">No Whitespace & Risks data available.</p>';
   let html = '';
   if (data.portfolioSummary?.length) {
-    html += `<div class="stats">${data.portfolioSummary.map((s) => `<div class="stat-card"><div class="stat-label">${esc(s.label)}</div><div class="stat-value">${esc(s.value)}</div><div class="stat-sub">${esc(s.subtext)}</div></div>`).join('')}</div>`;
+    html += `<h3 style="margin-top:0;">Portfolio Summary</h3>
+    <div class="stats">${data.portfolioSummary.map((s) => `<div class="stat-card"><div class="stat-label">${esc(s.label)}</div><div class="stat-value">${esc(s.value)}</div><div class="stat-sub">${esc(s.subtext)}</div></div>`).join('')}</div>`;
   }
   if (data.landscapeColumns?.length) {
-    html += `<div class="card-grid">${data.landscapeColumns.map((col) => `<div class="card"><h4>${esc(col.header)}</h4><ul>${(col.cells || []).map((c) => `<li><strong>${esc(c.name)}:</strong> ${esc(c.status)}${c.subtext ? ` — ${esc(c.subtext)}` : ''}</li>`).join('')}</ul></div>`).join('')}</div>`;
+    html += `<h3 style="margin-top:16px;">Whitespace Landscape</h3>
+    <div class="card-grid">${data.landscapeColumns.map((col) => `<div class="card"><h4>${esc(col.header)}</h4><ul>${(col.cells || []).map((c) => `<li><strong>${esc(c.name)}:</strong> ${esc(c.status)}${c.subtext ? ` — ${esc(c.subtext)}` : ''}</li>`).join('')}</ul></div>`).join('')}</div>`;
   }
   if (data.platformCells?.length) {
-    html += `<p class="section-sub" style="margin-top:12px;">Platform & Foundation: ${data.platformCells.map((c) => esc(c.name)).join(', ')}</p>`;
+    html += `<p class="section-sub" style="margin-top:12px;"><strong>Platform & Foundation:</strong> ${data.platformCells.map((c) => esc(c.name)).join(', ')}</p>`;
   }
   if (data.prioritizationFactors?.length) {
-    html += `<table><thead><tr><th>#</th><th>Title</th><th>Description</th><th>Application</th></tr></thead><tbody>
+    html += `<h3 style="margin-top:16px;">How We Prioritize Where To Sell</h3>
+    <table><thead><tr><th>#</th><th>Title</th><th>Description</th><th>Application</th></tr></thead><tbody>
       ${data.prioritizationFactors.map((f, i) => `<tr><td>${esc(f.number || i + 1)}</td><td>${esc(f.title)}</td><td>${esc(f.description)}</td><td>${esc(f.customerApplication || '—')}</td></tr>`).join('')}
     </tbody></table>`;
   }
   if (data.expansionSequence?.length) {
-    html += `<table><thead><tr><th>Rank</th><th>Module</th><th>Driver</th><th>Factors</th></tr></thead><tbody>
+    html += `<h3 style="margin-top:16px;">Ranked Expansion Sequence</h3>
+    <table><thead><tr><th>Rank</th><th>Module</th><th>Driver</th><th>Factors</th></tr></thead><tbody>
       ${data.expansionSequence.map((item, i) => `<tr><td>${item.rank || i + 1}</td><td>${esc(item.module)}</td><td>${esc(item.driver || item.rationale)}</td><td>${esc(item.factors || '—')}</td></tr>`).join('')}
     </tbody></table>`;
   }
   if (data.insights?.length) {
-    html += `<div class="card-grid" style="margin-top:16px;">${data.insights.map((i) => `<div class="card"><h4>${esc(i.title)}</h4><p style="font-size:12px;color:#5A6180;">${esc(i.description)}</p></div>`).join('')}</div>`;
+    html += `<h3 style="margin-top:16px;">Risks, Wins & Expansion Theses</h3>
+    <div class="card-grid">${data.insights.map((i) => `<div class="card"><h4>${esc(i.title)}</h4><p style="font-size:12px;color:#5A6180;">${esc(i.description)}</p></div>`).join('')}</div>`;
   }
   return html || '<p class="empty">No whitespace insights available.</p>';
 };
@@ -353,11 +466,13 @@ const buildUbpMarkup = (data) => {
   const metrics = ubp.keyMetrics;
   if (metrics) {
     const entries = Array.isArray(metrics) ? metrics : Object.entries(metrics).map(([k, v]) => ({ metric: k, ...v }));
-    html += `<div class="stats">${entries.map((m) => `<div class="stat-card"><div class="stat-label">${esc(m.metric)}</div><div class="stat-value">${esc(m.value)}</div>${m.source ? `<div class="stat-sub">${esc(m.source)}</div>` : ''}</div>`).join('')}</div>`;
+    html += `<h3 style="margin-top:16px;">Key Metrics</h3>
+    <div class="stats">${entries.map((m) => `<div class="stat-card"><div class="stat-label">${esc(m.metric)}</div><div class="stat-value">${esc(m.value)}</div>${m.source ? `<div class="stat-sub">${esc(m.source)}</div>` : ''}</div>`).join('')}</div>`;
   }
   const rows = ubp.estimatedUBPPricing?.pricingRows || ubp.estimatedUBPPricing?.lineItems || ubp.estimatedUBPPricing?.pricingData || [];
   if (rows.length) {
-    html += `<table><thead><tr><th>Line Item</th><th>Pricing Method</th><th>Est. List ACV</th><th>@30% Disc</th><th>@40% Disc</th><th>@65% Disc</th></tr></thead><tbody>
+    html += `<h3 style="margin-top:16px;">${esc(ubp.estimatedUBPPricing?.title || 'Estimated UBP Pricing')}</h3>
+    <table><thead><tr><th>Line Item</th><th>Pricing Method</th><th>Est. List ACV</th><th>@30% Disc</th><th>@40% Disc</th><th>@65% Disc</th></tr></thead><tbody>
       ${rows.map((r) => `<tr><td>${esc(r.lineItem)}</td><td>${esc(r.pricingMethod || '—')}</td><td>${formatCurrency(r.estListACV)}</td><td>${formatCurrency(r.at30Disc)}</td><td>${formatCurrency(r.at40Disc)}</td><td>${formatCurrency(r.at65Disc)}</td></tr>`).join('')}
       ${ubp.estimatedUBPPricing?.totals ? `<tr><td><strong>Estimated TOTAL (Year 1)</strong></td><td>Sum</td><td>${formatCurrency(ubp.estimatedUBPPricing.totals.totalEstListACV)}</td><td>${formatCurrency(ubp.estimatedUBPPricing.totals.total30Disc)}</td><td>${formatCurrency(ubp.estimatedUBPPricing.totals.total40Disc)}</td><td>${formatCurrency(ubp.estimatedUBPPricing.totals.total65Disc)}</td></tr>` : ''}
     </tbody></table>`;
@@ -375,7 +490,8 @@ const buildUbpMarkup = (data) => {
   </tbody></table>`;
   const tiers = ubp.composePackage?.tiers || ubp.composePackage?.packages || [];
   if (tiers.length) {
-    html += `<div class="card-grid" style="margin-top:12px;">${tiers.map((pkg) => `<div class="card">
+    html += `<h3 style="margin-top:16px;">${esc(ubp.composePackage?.title || 'Compose Package Tiers')}</h3>
+    <div class="card-grid" style="margin-top:12px;">${tiers.map((pkg) => `<div class="card">
       <h4>${esc(pkg.tierName || pkg.name)}</h4>
       <p class="section-sub">${pkg.percentOfP2P ? `${esc(pkg.percentOfP2P)}% of P2P` : esc(pkg.details || '')}</p>
       ${pkg.estListACV ? `<p style="font-size:12px;">Est. list ACV: ${formatCurrency(pkg.estListACV)}</p>` : ''}
@@ -446,7 +562,8 @@ const buildActionPlanMarkup = (data) => {
   const actions = data?.actions || data?.actionPlan?.items || data?.rows || (Array.isArray(data) ? data : []);
   if (!actions?.length) return '<p class="empty">No Action Plan data available.</p>';
   const summary = data?.actionPlan?.summary;
-  return `${summary ? `<p class="section-sub">${esc(summary)}</p>` : ''}
+  return `<h3 style="margin-top:0;">Recommended Actions</h3>
+  ${summary ? `<p class="section-sub">${esc(summary)}</p>` : ''}
   <table><thead><tr><th>Priority</th><th>Action</th><th>Owner</th><th>Impact</th><th>Source</th></tr></thead><tbody>
     ${actions.map((row, i) => `<tr>
       <td>${esc(row.priority || row.priorityLevel || `P${i + 1}`)}</td>

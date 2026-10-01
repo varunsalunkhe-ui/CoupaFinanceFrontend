@@ -145,9 +145,6 @@ const AccountFileManagerInner = ({ accountId, accountName, clientName, displayNa
                 </svg>
                 Account Files
               </h3>
-              {bucket && (
-                <span className="text-[11px] text-[#94A3B8] font-mono truncate max-w-[220px]">gcs://{bucket}/</span>
-              )}
             </div>
 
             {loading && (
