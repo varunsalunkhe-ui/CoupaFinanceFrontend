@@ -1,26 +1,11 @@
-/**
- * Consolidated Data API Service
- *
- * Builds a single JSON payload combining Hero Section + 4 tab data
- * (Snapshot, Portfolio, AI Agents, Usage).
- * Excludes Executive Summary and Action Plan — those will be generated
- * by the backend using this consolidated payload.
- */
-
 import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const REQUIRED_SECTIONS = ['hero', 'snapshot', 'portfolio', 'aiAgents', 'usage'];
 
-/**
- * Generate a unique session ID for this account visit.
- */
 export const generateSessionId = () => crypto.randomUUID();
 
-/**
- * Build the consolidated payload from all collected sections.
- */
 export const buildConsolidatedPayload = ({ sessionId, accountName, clientName, sections }) => ({
   sessionId,
   accountName,
@@ -83,9 +68,6 @@ export const sendConsolidatedData = async (payload, { bypassCache = false } = {}
     executiveSummary: parsed.executiveSummary || null,
     actionPlan: parsed.actionPlan || null,
     metadata: parsed.metadata || null,
-    // 'timestamp' is stamped by the backend when it actually computes the
-    // response — on a cache hit this is the original computation time, not
-    // now, so it reflects the true "last refreshed from backend" moment.
     backendTimestamp: raw.timestamp || null,
     backendSessionId: raw.session_id || null,
   };

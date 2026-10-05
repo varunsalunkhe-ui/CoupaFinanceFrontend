@@ -2,9 +2,6 @@ import axios from 'axios';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-// ============================================
-// Prompt templates per tab section
-// ============================================
 const TAB_PROMPTS = {
   summary: (name) => `Generate executive summary for ${name}`,
   whitespace: (name) => `Show whitespace and risks for ${name}`,
@@ -12,29 +9,19 @@ const TAB_PROMPTS = {
   plan: (name) => `Need action plan for ${name}`,
 };
 
-// ============================================
-// Response parsing utilities
-// ============================================
-
-/**
- * Extract JSON from a string (handles markdown fences, raw JSON, etc.)
- */
 function parseJsonFromString(text) {
   if (!text || typeof text !== 'string') return null;
 
-  // Strip markdown code fences
   const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (fenceMatch) {
     try { return JSON.parse(fenceMatch[1]); } catch { /* continue */ }
   }
 
-  // Try direct parse
   const trimmed = text.trim();
   if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
     try { return JSON.parse(trimmed); } catch { /* continue */ }
   }
 
-  // Extract first JSON object
   const firstBrace = text.indexOf('{');
   const lastBrace = text.lastIndexOf('}');
   if (firstBrace !== -1 && lastBrace > firstBrace) {
@@ -44,11 +31,6 @@ function parseJsonFromString(text) {
   return null;
 }
 
-/**
- * Normalize the API response output.
- * Backend returns: { output: <data>, session_id, timestamp, agent_type }
- * <data> can be an object directly or a JSON string.
- */
 function normalizeOutput(output) {
   if (!output) return null;
 
@@ -63,9 +45,6 @@ function normalizeOutput(output) {
   return output;
 }
 
-// ============================================
-// Core API call
-// ============================================
 
 /**
  * POST to the orchestrator agent.

@@ -81,7 +81,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
 
   useEffect(() => {
     loadAllTabs();
-  }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshKey]); 
 
   // Arrived here right after a document upload — bypass the Redis cache once
   // so tabs are recomputed against the newly uploaded file instead of stale data.

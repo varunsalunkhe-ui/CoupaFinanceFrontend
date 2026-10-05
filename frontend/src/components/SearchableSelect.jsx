@@ -2,8 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * A multi-select dropdown filter with an inline search box, used in place of a plain <select>
- * so users can type to narrow long option lists and pick multiple values (account/CVM owners, sponsors, etc.).
- * `values` is always an array; an empty array means "All".
  */
 const SearchableSelect = ({ label, values = [], onChange, options, className = '' }) => {
   const [open, setOpen] = useState(false);
