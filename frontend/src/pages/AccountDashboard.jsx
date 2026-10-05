@@ -81,7 +81,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
 
   useEffect(() => {
     loadAllTabs();
-  }, [refreshKey]); 
+  }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Arrived here right after a document upload — bypass the Redis cache once
   // so tabs are recomputed against the newly uploaded file instead of stale data.
@@ -333,15 +333,17 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
               <div className="relative group">
                 <button
                   onClick={handleDownloadDashboard}
+                  disabled={refreshing}
                   aria-label="Download HTML"
-                  className="flex items-center justify-center w-7 h-7 rounded-lg text-[#0369A1] bg-[#0369A1]/10 hover:bg-[#0369A1]/20 transition-colors cursor-pointer"
+                  title={refreshing ? 'Data is refreshing — try again once Update Data finishes' : undefined}
+                  className="flex items-center justify-center w-7 h-7 rounded-lg text-[#0369A1] bg-[#0369A1]/10 hover:bg-[#0369A1]/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
                   </svg>
                 </button>
                 <span className="pointer-events-none absolute right-0 top-full mt-2 whitespace-nowrap rounded-md bg-[#0F1733] px-2.5 py-1.5 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  Download HTML
+                  {refreshing ? 'Refreshing...' : 'Download HTML'}
                 </span>
               </div>
             </div>
