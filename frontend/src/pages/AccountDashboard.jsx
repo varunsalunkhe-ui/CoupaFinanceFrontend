@@ -73,10 +73,14 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
   const [refreshKey, setRefreshKey] = useState(0);
   const [downloadingPpt, setDownloadingPpt] = useState(false);
   const [helpGuideOpen, setHelpGuideOpen] = useState(false);
-  const { tabData, externalData, loadAllTabs, refreshAll, setExternalTabData, refreshing, lastRefreshed } = useDashboard();
+  const { tabData, tabLoading, externalData, loadAllTabs, refreshAll, setExternalTabData, refreshing, lastRefreshed } = useDashboard();
   const [showEntryOverlay, setShowEntryOverlay] = useState(true);
   const updateClickLockRef = useRef(false);
   const forceRefreshHandledRef = useRef(false);
+  // True whenever any tab (or hero) is still being fetched, including the very
+  // first load — not just an explicit 'Update Data' refresh — so export/refresh
+  // actions can't run against a still-incomplete dashboard.
+  const isBusy = refreshing || heroLoading || Object.values(tabLoading).some(Boolean);
 
 
   useEffect(() => {
@@ -268,8 +272,8 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
               <h2 className="text-xl font-bold text-[#0F1733]">Deep Dive</h2>
               <button
                 onClick={handleUpdateData}
-                disabled={refreshing}
-                title="Bypass cache and fetch the latest data for this account"
+                disabled={isBusy}
+                title={isBusy ? 'Please wait for the current data load to finish' : 'Bypass cache and fetch the latest data for this account'}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
                 {refreshing ? (
@@ -333,9 +337,9 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
               <div className="relative group">
                 <button
                   onClick={handleDownloadDashboard}
-                  disabled={refreshing}
+                  disabled={isBusy}
                   aria-label="Download HTML"
-                  title={refreshing ? 'Data is refreshing — try again once Update Data finishes' : undefined}
+                  title={isBusy ? 'Data is still loading — try again once it finishes' : undefined}
                   className="flex items-center justify-center w-7 h-7 rounded-lg text-[#0369A1] bg-[#0369A1]/10 hover:bg-[#0369A1]/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -343,7 +347,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                   </svg>
                 </button>
                 <span className="pointer-events-none absolute right-0 top-full mt-2 whitespace-nowrap rounded-md bg-[#0F1733] px-2.5 py-1.5 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  {refreshing ? 'Refreshing...' : 'Download HTML'}
+                  {isBusy ? (refreshing ? 'Refreshing...' : 'Loading...') : 'Download HTML'}
                 </span>
               </div>
             </div>
