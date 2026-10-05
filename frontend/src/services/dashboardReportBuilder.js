@@ -1,11 +1,3 @@
-/**
- * Dashboard Report Builder
- *
- * Builds downloadable, self-contained HTML reports from dashboard tab data.
- * Used by the per-tab "Download Report" button (AI Agents) and the
- * dashboard-wide "Download HTML" button (Hero + all 8 tabs).
- */
-
 const esc = (val) => {
   if (val === null || val === undefined) return '';
   return String(val)

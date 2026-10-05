@@ -23,15 +23,10 @@ const storeLastRefreshed = (accountName, isoString) => {
   }
 };
 
-// Module-level map to prevent duplicate fetches across StrictMode remounts
+
 const activeFetches = new Map();
 
-const getCache = (accountName) => {
-  return getDailyCached(CACHE_KEY_PREFIX + accountName);
-};
-
 export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, children }) => {
-  // const cached = getCache(accountName);
   const [tabData, setTabData] = useState({});
   const [tabLoading, setTabLoading] = useState({ summary: true, plan: true });
   const [tabErrors, setTabErrors] = useState({});
@@ -39,13 +34,9 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
   const fetchStartedRef = useRef(false);
   const unmountedRef = useRef(false);
   const tabInFlightRef = useRef(new Set());
-  // Set by refreshAll() ('Update Data'); read once per fetch call, cleared once
-  // the last dependent call (the consolidated summary/plan generation) settles.
   const bypassCacheRef = useRef(false);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(() => getStoredLastRefreshed(accountName));
-
-  // ── Consolidated Data (Hero + 4 tabs, excl. Executive Summary & Action Plan) ──
   const [consolidatedSessionId, setConsolidatedSessionId] = useState(() => generateSessionId());
   const [externalData, setExternalData] = useState({});
   const insightsFetchedRef = useRef(false);
@@ -139,12 +130,7 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
     return () => { unmountedRef.current = true; };
   }, []);
 
-  // Safety net: "refreshing" is normally cleared once the consolidated
-  // summary/plan call settles (see effect above), but that call only fires
-  // once hero + all 4 BigQuery sections succeed. If one of those never
-  // resolves (e.g. a downstream failure), don't leave the "Update Data"
-  // button stuck disabled forever — bound it to the agent's own worst-case
-  // timeout window.
+
   useEffect(() => {
     if (!refreshing) return;
     const timer = setTimeout(() => setRefreshing(false), 190000);
@@ -297,14 +283,10 @@ export const DashboardProvider = ({ accountName, clientName, ubpEnabled = true, 
   }, [accountName, tabSessions, consolidatedPayload]);
 
   const refreshAll = useCallback(() => {
-    // New session ID for the fresh consolidated payload
     setConsolidatedSessionId(generateSessionId());
     insightsFetchedRef.current = false;
-    // Reset state so loadAllTabs can run again
     fetchStartedRef.current = false;
     activeFetches.delete(accountName);
-    // "Update Data": every downstream call triggered by this pass must bypass
-    // the server-side cache and refresh it with the fresh response.
     bypassCacheRef.current = true;
     setRefreshing(true);
     setTabData({});

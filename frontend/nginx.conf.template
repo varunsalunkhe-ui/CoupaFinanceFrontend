@@ -1,0 +1,50 @@
+server {
+    listen 8080;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Proxy all API requests to the backend Cloud Run service.
+    # BACKEND_ORIGIN is substituted from the container's environment at startup
+    # (nginx:alpine templating) — set it via `docker run -e` or Cloud Run
+    # `--set-env-vars`; never hardcode an environment-specific URL here.
+    location /api/ {
+        proxy_pass ${BACKEND_ORIGIN}/;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_ssl_server_name on;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 300s;
+        # Nginx defaults to 1m and silently 413s any larger upload (e.g. document
+        # uploads) before it ever reaches the backend. 0 disables the size cap.
+        client_max_body_size 0;
+        # Default "on" makes nginx fully buffer (RAM/temp-file) the whole
+        # request body before it starts forwarding to the backend, effectively
+        # doubling large-upload latency (receive-then-forward instead of
+        # streaming). Off streams bytes to the backend as they arrive.
+        proxy_request_buffering off;
+    }
+
+    # Serve static files, fallback to index.html for SPA routing
+    # Ensure index.html is never cached (always fetch latest)
+    location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+
+    # Cache static assets (hashed filenames handle cache busting)
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}

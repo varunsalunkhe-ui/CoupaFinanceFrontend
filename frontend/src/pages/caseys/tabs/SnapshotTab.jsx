@@ -148,29 +148,6 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
             <span>Harvest metrics are based on PFI reporting data. Results may vary from other systems (Analytics, Customer Dashboard, etc.). AI-generated content should be verified.</span>
           </div>
 
-
-          {/* Customer Strategic Initiatives */}
-          {/* <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-[#0F1733]">Customer Strategic Initiatives</h3>
-              <span className="text-xs text-[#5A6180]">From Account Plan · Linked to Coupa expansion priorities</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {[
-                { title: 'CEO Rebelez: Become 3rd largest US c-retailer', desc: 'Goal to add 500 stores by FY26, requiring scalable procurement for new construction.', link: 'Supply Chain Design', color: '#4A3DC7' },
-                { title: 'CFO Bramlage: Working-capital optimization', desc: 'Focus on payables modernization and cost management.', link: 'Coupa Pay, Treasury', color: '#DB2777' },
-                { title: 'COO Williams: Foodservice & supply chain', desc: 'Drive foodservice innovation and build supply chain resilience.', link: 'Sourcing, SIM', color: '#F59E0B' },
-                { title: 'CIO Satturu: Tech consolidation & control', desc: 'Prioritizing digital transformation and control over indirect spend.', link: 'AIC, Intake', color: '#16A34A' },
-              ].map((item, i) => (
-                <div key={i} className="bg-white border border-[#E4E7F1] rounded-lg p-4" style={{ borderLeft: `4px solid ${item.color}` }}>
-                  <div className="text-[13px] font-bold text-[#0F1733] mb-1">{item.title}</div>
-                  <div className="text-xs text-[#5A6180] mb-2">{item.desc}</div>
-                  <div className="text-xs text-[#4A3DC7] font-medium">→ {item.link}</div>
-                </div>
-              ))}
-            </div>
-          </div> */}
-
           {/* Section 1 · Spend Data */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4 pb-1.5 border-b-2 border-[#E4E7F1]">
@@ -254,9 +231,6 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6180]">Section 2 · Value Metrics (KPIs)</h3>
             </div>
             <div className="grid grid-cols md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {/* Sourcing */}
-              
-
               {/* Procurement */}
               <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
                 <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
@@ -282,11 +256,6 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                 <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
                 <div className="p-4">
                   <div className="text-[10px] uppercase tracking-wider text-[#2563EB] font-bold mb-3">Invoicing</div>
-                  {/* <div className="mb-3">
-                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Invoice Processing Cycle</div>
-                    <div className="text-2xl font-bold text-[#0F1733]">{formatDays(data.Invoice_Processing_Cycle)}</div>
-                    <div className="text-[11px] text-[#5A6180]">{data.Invoice_Processing_Cycle_text || ''}</div>
-                  </div> */}
                   <div className="relative pr-5">
                     <KpiEyeInfo text={METRIC_DEFINITIONS.firstTimeMatchRate} />
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">First Time Match Rate</div>
@@ -316,18 +285,6 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                   </div>
                 </div>
               </div>
-              {/* <div className="bg-white border border-[#E4E7F1] rounded-lg overflow-hidden">
-                <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
-                <div className="p-4">
-                  <div className="text-[10px] uppercase tracking-wider text-[#16A34A] font-bold mb-3">Sourcing</div>
-                  
-                  <div>
-                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Number of Sourcing Events</div>
-                    <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Sourcing_Projects}</div>
-                    <div className="text-[11px] text-[#5A6180]">{data.Total_Sourcing_Projects_text || ''}</div>
-                  </div>
-                </div>
-              </div> */}
             </div>
           </div>
 
@@ -393,13 +350,6 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                 </div>
               </div>
             </div>
-            {/* Pay strategy callout */}
-            {/* <div className="p-4 bg-[#EEF2FF] border border-[#C7D2FE] rounded-lg">
-              <div className="text-xs font-bold text-[#0F1733] mb-1">Pay strategy talking points for AE/CFO conversation</div>
-              <div className="text-xs text-[#5A6180]">
-                VCard spend is strong at {formatCurrency(data.VCard_Volume)} TTM. However, the EPD module is underutilized with only {formatCurrency(data.EPD_Rebates)} in rebates captured against a significant NET 60 invoice volume. This represents a major opportunity for working capital improvement and savings.
-              </div>
-            </div> */}
           </div>
 
           {/* Section 4 · Value Realized */}

@@ -1,8 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-// Small hoverable "i" icon that renders its tooltip via a portal so it
-// is never clipped by the scrollable tab bar's overflow container.
 const TOOLTIP_WIDTH = 288; // px, matches w-72
 const VIEWPORT_MARGIN = 8;
 
@@ -15,7 +13,6 @@ const InfoTooltip = ({ text }) => {
     const rect = iconRef.current?.getBoundingClientRect();
     if (rect) {
       const center = rect.left + rect.width / 2;
-      // clamp so the tooltip's left edge never falls outside the viewport
       const minLeft = VIEWPORT_MARGIN;
       const maxLeft = window.innerWidth - TOOLTIP_WIDTH - VIEWPORT_MARGIN;
       const left = Math.min(Math.max(center - TOOLTIP_WIDTH / 2, minLeft), maxLeft);

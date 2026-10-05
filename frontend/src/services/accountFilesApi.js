@@ -39,7 +39,7 @@ export const uploadAccountFile = async (accountName, file) => {
   const response = await axios.post(`${API_BASE}/account-files/upload`, formData, {
     params: { account_name: accountName },
     headers: { Accept: '*/*', 'Content-Type': 'multipart/form-data' },
-    timeout: 0, // no client-side timeout — large files can take a while
+    timeout: 0, 
     maxContentLength: Infinity,
     maxBodyLength: Infinity,
   });

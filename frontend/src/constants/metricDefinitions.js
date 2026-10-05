@@ -1,7 +1,4 @@
-// Business definitions sourced from the "Metrics_Definitions_Tracker" reference doc.
-// Shared between SnapshotTab (Value Snapshot) and UsageTab, which reuses the
-// Spend Data definitions for its "see above" rows. Metrics with no definition
-// in the tracker (e.g. Non-External Spend, Section 3/4 KPIs) are intentionally omitted.
+
 export const METRIC_DEFINITIONS = {
   coupaPoSpend: 'The sum of approved purchase orders that were created and approved within Coupa (i.e., originated in Coupa, not imported from an external system). This explicitly excludes External PO spend.',
   nonPoInvoiceSpend: 'Approved invoice spend processed through Coupa that is not backed by a Purchase Order. This includes services billed under a contract without a PO (e.g., telco, leases, legal services), ad-hoc expense-type invoices (e.g., facility repair, lawn services), and supplier-initiated shipment/billing. This spend counts toward SG&A and public company reporting. Ingestion tools include Invoice Smash / Rossum.',

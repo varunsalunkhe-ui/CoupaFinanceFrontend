@@ -4,11 +4,6 @@ import { createPortal } from 'react-dom';
 const TOOLTIP_WIDTH = 288; // px, matches w-72
 const VIEWPORT_MARGIN = 8;
 
-/**
- * Small hoverable eye icon, absolutely positioned at the top-right corner of a
- * `relative`-positioned KPI card, revealing that metric's business definition.
- * Only render this where a definition actually exists (callers should guard).
- */
 const KpiEyeInfo = ({ text, colorClassName = 'text-[#94A3B8] hover:text-[#0369A1]' }) => {
   const [visible, setVisible] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
