@@ -60,14 +60,6 @@ const formatPercent = (val) => {
 };
 
 
-// One-decimal variant for small-magnitude KPI shares (e.g. 0.02%) that would round to 0% otherwise
-const formatPercent1 = (val) => {
-  const num = parseNumericValue(val);
-  if (num === null) return ' — ';
-  return `${num.toFixed(1)}%`;
-};
-
-
 const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
   const customerName = clientName || accountName;
   const [data, setData] = useState(null);
@@ -270,19 +262,14 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                 <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
                 <div className="p-4">
                   <div className="text-[10px] uppercase tracking-wider text-[#7C3AED] font-bold mb-3">Contracts & Sourcing</div>
-                  <div className="relative mb-3 pr-5">
+                  <div className="relative pr-5">
                     <KpiEyeInfo text={METRIC_DEFINITIONS.totalContracts} />
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Contracts <span className="normal-case">(Includes active contracts)</span></div>
                     <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Contracts}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Contracts_text || ''}</div>
 
                   </div>
-                  <div className="relative pr-5">
-                    <KpiEyeInfo text={METRIC_DEFINITIONS.totalSourcingProjects} />
-                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Number of Sourcing Events <span className="normal-case ">(Includes non-completed events)</span></div>
-                    <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Sourcing_Projects}</div>
-                    <div className="text-[11px] text-[#5A6180]">{data.Total_Sourcing_Projects_text || ''}</div>
-                  </div>
+                  {/* Total Number of Sourcing Events hidden — numbers aren't coming through properly */}
                 </div>
               </div>
             </div>
@@ -294,7 +281,8 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6180]">Section 3 · Coupa Pay Performance</h3>
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600">Coupa Pay data is now available and has been merged.</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* % of Invoice Volume KPI (middle box) hidden per request */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-[#0F1733] mb-3">Total Volume</div>
                 <div className="grid grid-cols-3 divide-x divide-[#E4E7F1]">
@@ -309,24 +297,6 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                   <div className="px-3">
                     <div className="min-h-7 flex items-end text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1 leading-tight"> EPD </div>
                     <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Early_Pay_Discounts_Captured)}</div>
-                  </div>
-                  
-                </div>
-              </div>
-              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#0F1733] mb-3">% of Invoice Volume</div>
-                <div className="grid grid-cols-3 divide-x divide-[#E4E7F1]">
-                  <div className="px-3">
-                    <div className="min-h-7 flex items-end text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1 leading-tight">Digital Payment</div>
-                    <div className="text-lg font-bold text-[#4A3DC7]">{formatPercent1(data.Digital_Payment_Volume_pct_of_invoice_volume)}</div>
-                  </div>
-                  <div className="px-3">
-                    <div className="min-h-7 flex items-end text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1 leading-tight ">Virtual Card</div>
-                    <div className="text-lg font-bold text-[#4A3DC7]">{formatPercent1(data.VCard_Volume_pct_of_invoice_volume)}</div>
-                  </div>
-                   <div className="px-3">
-                    <div className="min-h-7 flex items-end text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1 leading-tight">EPD</div>
-                    <div className="text-lg font-bold text-[#4A3DC7]">{formatPercent1(data.Early_Pay_Discounts_Captured_pct_of_invoice_volume)}</div>
                   </div>
                   
                 </div>

@@ -1,3 +1,11 @@
+/**
+ * Dashboard Report Builder
+ *
+ * Builds downloadable, self-contained HTML reports from dashboard tab data.
+ * Used by the per-tab "Download Report" button (AI Agents) and the
+ * dashboard-wide "Download HTML" button (Hero + all 8 tabs).
+ */
+
 const esc = (val) => {
   if (val === null || val === undefined) return '';
   return String(val)
@@ -278,7 +286,6 @@ const snapFormatDayReduction = (val) => {
   return `${Math.round(num * 100) / 100} day reduction`;
 };
 const snapFormatPercent = (val) => (val === null || val === undefined || val === 'NA') ? '—' : `${Number(val).toFixed(0)}%`;
-const snapFormatPercent1 = (val) => { const n = snapParseNum(val); return n === null ? '—' : `${n.toFixed(1)}%`; };
 
 /** Value Realized rows — mirrors the static table structure in SnapshotTab.jsx Section 4. */
 const buildValueRealizedRows = (d) => [
@@ -323,21 +330,21 @@ const buildSnapshotMarkup = (snapshot) => {
   </tbody></table>`;
 
   // ─── Section 2 · Value Metrics (KPIs) ───
+  // Total Number of Sourcing Events hidden — numbers aren't coming through properly
   html += `<p class="section-sub" style="margin-top:20px;">Section 2 · Value Metrics (KPIs)</p>
   <table><thead><tr><th>Category</th><th>Metric</th><th>Value</th><th>Detail</th></tr></thead><tbody>
     <tr><td>Procurement</td><td>On-Contract Savings</td><td>${formatCurrency(d.Spend_Under_Contract_Savings_Capture)}</td><td>${esc(d.Spend_Under_Contract_Savings_Capture_text || '')}</td></tr>
     <tr><td>Procurement</td><td>Requisition Cycle Time</td><td>${snapFormatDays(d.PR_to_PO_Cycle_Time)}</td><td>${esc(d.PR_to_PO_Cycle_Time_text || '')}</td></tr>
     <tr><td>Invoicing</td><td>First Time Match Rate</td><td>${snapFormatPercent(d.First_Time_Match_Rate)}</td><td>${esc(d.First_Time_Match_Rate_text || '')}</td></tr>
     <tr><td>Contracts & Sourcing</td><td>Total Contracts (incl. active contracts)</td><td>${esc(d.Total_Contracts)}</td><td>${esc(d.Total_Contracts_text || '')}</td></tr>
-    <tr><td>Contracts & Sourcing</td><td>Total Number of Sourcing Events (incl. non-completed)</td><td>${esc(d.Total_Sourcing_Projects)}</td><td>${esc(d.Total_Sourcing_Projects_text || '')}</td></tr>
   </tbody></table>`;
 
   // ─── Section 3 · Coupa Pay Performance ───
   html += `<p class="section-sub" style="margin-top:20px;">Section 3 · Coupa Pay Performance</p>
-  <table><thead><tr><th>Payment Channel</th><th>Total Volume</th><th>% of Invoice Volume</th><th>Revenue Share</th></tr></thead><tbody>
-    <tr><td>Digital Payment</td><td>${formatCurrency(d.Digital_Payment_Volume)}</td><td>${snapFormatPercent1(d.Digital_Payment_Volume_pct_of_invoice_volume)}</td><td>${formatCurrency(d.Digital_Payment_Revenue_Share)}</td></tr>
-    <tr><td>Virtual Card</td><td>${formatCurrency(d.VCard_Volume)}</td><td>${snapFormatPercent1(d.VCard_Volume_pct_of_invoice_volume)}</td><td>${formatCurrency(d.VCard_Revenue_Share)}</td></tr>
-    <tr><td>EPD (Early Pay Discounts)</td><td>${formatCurrency(d.Early_Pay_Discounts_Captured)}</td><td>${snapFormatPercent1(d.Early_Pay_Discounts_Captured_pct_of_invoice_volume)}</td><td>${formatCurrency(d.EPD_Revenue_Share)}</td></tr>
+  <table><thead><tr><th>Payment Channel</th><th>Total Volume</th><th>Revenue Share</th></tr></thead><tbody>
+    <tr><td>Digital Payment</td><td>${formatCurrency(d.Digital_Payment_Volume)}</td><td>${formatCurrency(d.Digital_Payment_Revenue_Share)}</td></tr>
+    <tr><td>Virtual Card</td><td>${formatCurrency(d.VCard_Volume)}</td><td>${formatCurrency(d.VCard_Revenue_Share)}</td></tr>
+    <tr><td>EPD (Early Pay Discounts)</td><td>${formatCurrency(d.Early_Pay_Discounts_Captured)}</td><td>${formatCurrency(d.EPD_Revenue_Share)}</td></tr>
   </tbody></table>`;
 
   // ─── Section 4 · Value Realized ───
