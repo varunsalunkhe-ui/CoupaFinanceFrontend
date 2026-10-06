@@ -296,7 +296,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
             </div>
             
             <div className="flex items-center gap-2">
-              <button
+              {/* <button
                 onClick={handleDownloadPpt}
                 disabled={downloadingPpt}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#0369A1] bg-[#0369A1]/10 rounded-lg hover:bg-[#0369A1]/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
@@ -312,7 +312,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
                   </svg>
                 )}
                 {downloadingPpt ? 'Generating...' : 'Download Deck'}
-              </button>
+              </button> */}
 
               <button
                 onClick={() => window.open('https://vertexaisearch.cloud.google.com/us/home/cid/e0f17eb4-7f71-46db-9249-ea739ee10e2f/r/agent/8365950098131666619/session/-?hl=en_US&_gl=1*ua8eue*_ga*MTE1MDk5MjkzMS4xNzc5MTE2Nzg2*_ga_WH2QY8WWF5*czE3ODY5NDk5MzkkbzI4OCRnMSR0MTc4Njk1MDAxNiRqNDUkbDAkaDA', '_blank', 'noopener,noreferrer')}
