@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TabLoader from '../../../components/TabLoader';
 import { useDashboard } from '../../../context/DashboardContext';
+import { authenticatedFetch } from '../../../services/apiAuthInterceptor';
 import { buildAgentsReportHtml, downloadHtmlFile } from '../../../services/dashboardReportBuilder';
 
 const AI_AGENTS_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -68,7 +69,7 @@ const AIAgentsTab = ({ accountName, clientName, forceRefresh = false }) => {
     try {
       const params = new URLSearchParams({ customer_name: customerName, section: 'ai-agents' });
       if (forceRefresh) params.set('refresh', 'true');
-      const response = await fetch(`${AI_AGENTS_API_BASE}/section?${params.toString()}`, {
+      const response = await authenticatedFetch(`${AI_AGENTS_API_BASE}/section?${params.toString()}`, {
         headers: { 'accept': 'application/json', 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
       });
       if (!response.ok) {

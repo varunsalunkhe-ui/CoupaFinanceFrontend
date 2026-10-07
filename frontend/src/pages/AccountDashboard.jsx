@@ -12,6 +12,7 @@ import ActionPlanTab from './caseys/tabs/ActionPlanTab';
 import { DashboardProvider, useDashboard } from '../context/DashboardContext';
 import { fetchSection, transformHeroData } from '../services/bigqueryApi';
 import { fetchClients, findClientBySlug } from '../services/clientsApi';
+import { authenticatedFetch } from '../services/apiAuthInterceptor';
 import InfoTooltip from '../components/InfoTooltip';
 import HelpGuideModal from '../components/HelpGuideModal';
 import AgentLoadingOverlay from '../components/AgentLoadingOverlay';
@@ -125,7 +126,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
   const handleDownloadPpt = useCallback(async () => {
     setDownloadingPpt(true);
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `${PPT_API_BASE}/generate-ppt/${encodeURIComponent(clientName)}?user_id=default-user`,
         {
           method: 'POST',

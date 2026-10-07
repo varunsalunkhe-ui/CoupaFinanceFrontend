@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TabLoader from '../../../components/TabLoader';
 import { useDashboard } from '../../../context/DashboardContext';
+import { authenticatedFetch } from '../../../services/apiAuthInterceptor';
 import KpiEyeInfo from '../../../components/KpiEyeInfo';
 import { METRIC_DEFINITIONS } from '../../../constants/metricDefinitions';
 
@@ -96,7 +97,7 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
     try {
       const params = new URLSearchParams({ customer_name: customerName, section: 'value_snapshot' });
       if (forceRefresh) params.set('refresh', 'true');
-      const response = await fetch(`${CUSTOMER_VALUE_API}/section?${params.toString()}`, {
+      const response = await authenticatedFetch(`${CUSTOMER_VALUE_API}/section?${params.toString()}`, {
         headers: { accept: 'application/json', 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
       });
       if (!response.ok) throw new Error(`Failed to fetch (${response.status})`);
@@ -262,14 +263,19 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                 <div className="h-1 border-t-4 border-t-[#4A3DC7]"></div>
                 <div className="p-4">
                   <div className="text-[10px] uppercase tracking-wider text-[#7C3AED] font-bold mb-3">Contracts & Sourcing</div>
-                  <div className="relative pr-5">
+                  <div className="relative mb-3 pr-5">
                     <KpiEyeInfo text={METRIC_DEFINITIONS.totalContracts} />
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Contracts <span className="normal-case">(Includes active contracts)</span></div>
                     <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Contracts}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Contracts_text || ''}</div>
 
                   </div>
-                  {/* Total Number of Sourcing Events hidden — numbers aren't coming through properly */}
+                  <div className="relative pr-5">
+                    <KpiEyeInfo text={METRIC_DEFINITIONS.totalSourcingProjects} />
+                    <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Number of Sourcing Events <span className="normal-case ">(Includes non-completed events)</span></div>
+                    <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Sourcing_Projects}</div>
+                    <div className="text-[11px] text-[#5A6180]">{data.Total_Sourcing_Projects_text || ''}</div>
+                  </div>
                 </div>
               </div>
             </div>

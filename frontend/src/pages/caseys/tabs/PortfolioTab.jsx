@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TabLoader from '../../../components/TabLoader';
 import { useDashboard } from '../../../context/DashboardContext';
+import { authenticatedFetch } from '../../../services/apiAuthInterceptor';
 
 const PORTFOLIO_API = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -94,7 +95,7 @@ const PortfolioTab = ({ accountName, clientName, forceRefresh = false }) => {
     try {
       const params = new URLSearchParams({ customer_name: customerName, section: 'product-portfolio' });
       if (forceRefresh) params.set('refresh', 'true');
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `${PORTFOLIO_API}/section?${params.toString()}`,
         { headers: { accept: 'application/json', 'Cache-Control': 'no-cache', Pragma: 'no-cache' } }
       );

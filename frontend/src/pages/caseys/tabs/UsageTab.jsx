@@ -15,6 +15,7 @@ import {
 import { Line, Bar } from 'react-chartjs-2';
 import TabLoader from '../../../components/TabLoader';
 import { useDashboard } from '../../../context/DashboardContext';
+import { authenticatedFetch } from '../../../services/apiAuthInterceptor';
 import KpiEyeInfo from '../../../components/KpiEyeInfo';
 import { METRIC_DEFINITIONS } from '../../../constants/metricDefinitions';
 
@@ -130,7 +131,7 @@ const UsageTab = ({ accountName, clientName, forceRefresh = false }) => {
         section: 'usage',
       });
       if (forceRefresh) params.set('refresh', 'true');
-      const response = await fetch(`${USAGE_API_BASE}/section?${params.toString()}`, {
+      const response = await authenticatedFetch(`${USAGE_API_BASE}/section?${params.toString()}`, {
         headers: { 'accept': 'application/json', 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
       });
       if (!response.ok) {
