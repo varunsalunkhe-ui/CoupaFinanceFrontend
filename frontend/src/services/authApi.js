@@ -3,6 +3,17 @@ import axios from 'axios';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 /**
+ * Returns the Okta-authenticated user's email (set in sessionStorage by
+ * AuthContext on login) for use as the backend's user_id field, so backend
+ * logs/sessions reflect the real logged-in user instead of a placeholder.
+ * Falls back to 'default-user' only if no session email is available.
+ */
+export const getCurrentUserId = () => {
+  const email = sessionStorage.getItem('userEmail');
+  return email && email.trim() ? email : 'default-user';
+};
+
+/**
  * Validate if a okta-authenticated email is authorized to use the app.
  * Calls GET /users/{email} — returns true if authorized, false otherwise.
  */
