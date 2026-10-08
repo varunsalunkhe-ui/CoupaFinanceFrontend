@@ -38,7 +38,7 @@ export const isPayloadComplete = (sections) => {
  */
 export const sendConsolidatedData = async (payload, { bypassCache = false } = {}) => {
   const body = {
-    prompt: `Give account plan for this client ${payload.clientName}.`,
+    prompt: `Give account plan for this client ${payload.clientName}`,
     user_id: 'default-user',
     session_id: payload.sessionId,
     data: payload,
