@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getCurrentUserId } from './authApi';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -58,7 +59,7 @@ const queryAgent = async (prompt, sessionId = null, retries = 3, cacheKey = null
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const body = { prompt, user_id: 'default-user' };
+      const body = { prompt, user_id: getCurrentUserId() };
       if (sessionId) body.session_id = sessionId;
       if (cacheKey) {
         body.cache_key = cacheKey;

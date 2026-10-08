@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getCurrentUserId } from './authApi';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -39,7 +40,7 @@ export const isPayloadComplete = (sections) => {
 export const sendConsolidatedData = async (payload, { bypassCache = false } = {}) => {
   const body = {
     prompt: `Give account plan for this client ${payload.clientName}`,
-    user_id: 'default-user',
+    user_id: getCurrentUserId(),
     session_id: payload.sessionId,
     data: payload,
     cache_key: `${payload.clientName}:consolidated`,

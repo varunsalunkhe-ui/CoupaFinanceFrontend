@@ -87,22 +87,59 @@ const Home = () => {
     return () => { cancelled = true; };
   }, []);
 
-  // Unique filter options derived from the loaded accounts
-  const ownerOptions = useMemo(() => Array.from(new Set(accounts.map((a) => a.accountOwner).filter(Boolean))).sort(), [accounts]);
-  const cvmOwnerOptions = useMemo(() => Array.from(new Set(accounts.map((a) => a.cvmOwner).filter(Boolean))).sort(), [accounts]);
-  const sponsorOptions = useMemo(() => Array.from(new Set(accounts.map((a) => a.executiveSponsor).filter(Boolean))).sort(), [accounts]);
+  // Matches an account against search + all filters except the one named in `skip`,
+  // so each filter's own option list is narrowed by the *other* active filters (cascading).
+  const matchesFilters = (account, skip) => {
+    const query = search.trim().toLowerCase();
+    if (query && !account.name.toLowerCase().includes(query)) return false;
+    if (skip !== 'owner' && ownerFilter.length > 0 && !ownerFilter.includes(account.accountOwner)) return false;
+    if (skip !== 'cvmOwner' && cvmOwnerFilter.length > 0 && !cvmOwnerFilter.includes(account.cvmOwner)) return false;
+    if (skip !== 'sponsor' && sponsorFilter.length > 0 && !sponsorFilter.includes(account.executiveSponsor)) return false;
+    return true;
+  };
+
+  // Cascading filter options: each dropdown only offers values still reachable given the other selected filters
+  const ownerOptions = useMemo(
+    () => Array.from(new Set(accounts.filter((a) => matchesFilters(a, 'owner')).map((a) => a.accountOwner).filter(Boolean))).sort(),
+    [accounts, search, cvmOwnerFilter, sponsorFilter],
+  );
+  const cvmOwnerOptions = useMemo(
+    () => Array.from(new Set(accounts.filter((a) => matchesFilters(a, 'cvmOwner')).map((a) => a.cvmOwner).filter(Boolean))).sort(),
+    [accounts, search, ownerFilter, sponsorFilter],
+  );
+  const sponsorOptions = useMemo(
+    () => Array.from(new Set(accounts.filter((a) => matchesFilters(a, 'sponsor')).map((a) => a.executiveSponsor).filter(Boolean))).sort(),
+    [accounts, search, ownerFilter, cvmOwnerFilter],
+  );
+
+  // Drop any selected values that fell out of range once the other filters narrowed the options.
+  // Bail out (return the same array reference) when nothing is actually pruned — each options
+  // memo above depends on the *other* filters' state, so an unconditional new reference here
+  // would ping-pong between the three effects forever and freeze the page.
+  useEffect(() => {
+    setOwnerFilter((prev) => {
+      const next = prev.filter((v) => ownerOptions.includes(v));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [ownerOptions]);
+  useEffect(() => {
+    setCvmOwnerFilter((prev) => {
+      const next = prev.filter((v) => cvmOwnerOptions.includes(v));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [cvmOwnerOptions]);
+  useEffect(() => {
+    setSponsorFilter((prev) => {
+      const next = prev.filter((v) => sponsorOptions.includes(v));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [sponsorOptions]);
 
   // Filter accounts based on search + owner/CVM owner/sponsor filters (each supports multiple selections)
-  const filteredAccounts = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return accounts.filter((account) => {
-      if (query && !account.name.toLowerCase().includes(query)) return false;
-      if (ownerFilter.length > 0 && !ownerFilter.includes(account.accountOwner)) return false;
-      if (cvmOwnerFilter.length > 0 && !cvmOwnerFilter.includes(account.cvmOwner)) return false;
-      if (sponsorFilter.length > 0 && !sponsorFilter.includes(account.executiveSponsor)) return false;
-      return true;
-    });
-  }, [accounts, search, ownerFilter, cvmOwnerFilter, sponsorFilter]);
+  const filteredAccounts = useMemo(
+    () => accounts.filter((account) => matchesFilters(account, null)),
+    [accounts, search, ownerFilter, cvmOwnerFilter, sponsorFilter],
+  );
 
   const handleLogout = () => {
     logout();

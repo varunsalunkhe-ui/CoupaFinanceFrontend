@@ -17,6 +17,7 @@ import InfoTooltip from '../components/InfoTooltip';
 import HelpGuideModal from '../components/HelpGuideModal';
 import AgentLoadingOverlay from '../components/AgentLoadingOverlay';
 import { buildFullDashboardReportHtml, downloadHtmlFile } from '../services/dashboardReportBuilder';
+import { getCurrentUserId } from '../services/authApi';
 
 const ENTRY_OVERLAY_DURATION_MS = 8500;
 
@@ -127,7 +128,7 @@ const AccountDashboardInner = ({ accountId, accountName, clientName, displayName
     setDownloadingPpt(true);
     try {
       const response = await authenticatedFetch(
-        `${PPT_API_BASE}/generate-ppt/${encodeURIComponent(clientName)}?user_id=default-user`,
+        `${PPT_API_BASE}/generate-ppt/${encodeURIComponent(clientName)}?user_id=${encodeURIComponent(getCurrentUserId())}`,
         {
           method: 'POST',
           headers: { 'accept': 'application/octet-stream, application/json' },
