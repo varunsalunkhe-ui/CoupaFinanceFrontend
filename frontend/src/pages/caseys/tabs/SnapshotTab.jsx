@@ -270,12 +270,12 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Contracts_text || ''}</div>
 
                   </div>
-                  <div className="relative pr-5">
+                  {/* <div className="relative pr-5">
                     <KpiEyeInfo text={METRIC_DEFINITIONS.totalSourcingProjects} />
                     <div className="text-[10px] uppercase text-[#5A6180] tracking-wide">Total Number of Sourcing Events <span className="normal-case ">(Includes non-completed events)</span></div>
                     <div className="text-2xl font-bold text-[#0F1733]">{data.Total_Sourcing_Projects}</div>
                     <div className="text-[11px] text-[#5A6180]">{data.Total_Sourcing_Projects_text || ''}</div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
