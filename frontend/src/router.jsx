@@ -11,7 +11,8 @@ import Login from './pages/Login';
 import AccountDashboard from './pages/AccountDashboard';
 import AccountFileManager from './pages/AccountFileManager.jsx';
 
-const oktaAuth = new OktaAuth(oktaConfig);
+// Exported so services/apiAuthInterceptor.js can attach the access token to API calls.
+export const oktaAuth = new OktaAuth(oktaConfig);
 
 const restoreOriginalUri = (_oktaAuth, originalUri) => {
   window.location.replace(toRelativeUrl(originalUri || '/', window.location.origin));
