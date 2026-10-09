@@ -60,6 +60,11 @@ const formatPercent = (val) => {
   return `${Number(val).toFixed(0)}%`;
 };
 
+const formatPercent1 = (val) => {
+  const num = parseNumericValue(val);
+  if (num === null) return ' — ';
+  return `${num.toFixed(1)}%`;
+};
 
 const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
   const customerName = clientName || accountName;
@@ -147,7 +152,7 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6180]">Section 1 - UBP Measured Spend Data</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-4">
-             <div className="relative bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
+              <div className="relative bg-white border border-[#E4E7F1] rounded-lg p-5 border-t-4 border-t-[#4A3DC7]">
                 <KpiEyeInfo text={METRIC_DEFINITIONS.coupaPoSpend} />
                 <div className="text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-2">Coupa PO Spend</div>
                 <div className="text-3xl font-bold text-[#0F1733]">{formatCurrency(data.po_spend)}</div>
@@ -165,13 +170,13 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                 <div className="text-3xl font-bold text-[#0F1733]">{formatCurrency(data.External_PO_based_Invoice_Spend)}</div>
                 <div className="text-xs text-[#16A34A] mt-1">{data.External_PO_based_Invoice_Spend_text || ''}</div>
               </div>
-              <div 
+              <div
                 className="relative rounded-lg p-5 border-t-4 border-t-[#FF6B35] border-l-0 border-r-0 border-b-0"
                 style={{
                   background: 'linear-gradient(155deg, #1e3a8a 0%, #0f172a 100%)',
                 }}
               >
-                 <KpiEyeInfo text={METRIC_DEFINITIONS.totalCoupaSpend} colorClassName="text-[#CFDDF6]/70 hover:text-white" />
+                <KpiEyeInfo text={METRIC_DEFINITIONS.totalCoupaSpend} colorClassName="text-[#CFDDF6]/70 hover:text-white" />
                 <div className="text-[12px] uppercase tracking-[0.03em] text-[#B9CBEF] font-bold mb-2">Composition of Total UBP Measured Spend</div>
                 <div className="text-[32px] font-black mt-2.5 text-white" style={{ fontFamily: "'Manrope', sans-serif" }}>{formatCurrency(data.total_coupa_spend)}</div>
                 <div className="text-[11.5px] text-[#CFDDF6] mt-2 font-medium">{'Coupa PO Spend + Non-PO Invoice Spend + External PO-based Invoice Spend'}</div>
@@ -288,7 +293,7 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600">Coupa Pay data is now available and has been merged.</span>
             </div>
             {/* % of Invoice Volume KPI (middle box) hidden per request */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-[#0F1733] mb-3">Total Volume</div>
                 <div className="grid grid-cols-3 divide-x divide-[#E4E7F1]">
@@ -304,7 +309,24 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                     <div className="min-h-7 flex items-end text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1 leading-tight"> EPD </div>
                     <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.Early_Pay_Discounts_Captured)}</div>
                   </div>
-                  
+                </div>
+              </div>
+              <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#0F1733] mb-3">% of Invoice Volume</div>
+                <div className="grid grid-cols-3 divide-x divide-[#E4E7F1]">
+                  <div className="px-3">
+                    <div className="min-h-7 flex items-end text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1 leading-tight">Digital Payment</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatPercent1(data.Digital_Payment_Volume_pct_of_invoice_volume)}</div>
+                  </div>
+                  <div className="px-3">
+                    <div className="min-h-7 flex items-end text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1 leading-tight ">Virtual Card</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatPercent1(data.VCard_Volume_pct_of_invoice_volume)}</div>
+                  </div>
+                  <div className="px-3">
+                    <div className="min-h-7 flex items-end text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1 leading-tight">EPD</div>
+                    <div className="text-lg font-bold text-[#4A3DC7]">{formatPercent1(data.Early_Pay_Discounts_Captured_pct_of_invoice_volume)}</div>
+                  </div>
+
                 </div>
               </div>
               <div className="bg-white border border-[#E4E7F1] rounded-lg p-4 border-t-4 border-t-[#4A3DC7]">
@@ -318,7 +340,7 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                     <div className="min-h-7 flex items-end text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1 leading-tight"> Virtual Card</div>
                     <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.VCard_Revenue_Share)}</div>
                   </div>
-                 
+
                   <div className="pl-3">
                     <div className="min-h-7 flex items-end text-[10px] uppercase tracking-wider text-[#5A6180] font-semibold mb-1 leading-tight">EPD</div>
                     <div className="text-lg font-bold text-[#4A3DC7]">{formatCurrency(data.EPD_Revenue_Share)}</div>
@@ -394,23 +416,27 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                   </tr>
 
                   {/* Platform */}
-                  {(() => { const isNA1 = parseNumericValue(data['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Smart_Intake_and_Orchestration']) == null; return (
-                  <tr className={`border-b border-[#E4E7F1] ${isNA1 ? 'opacity-40' : ''}`}>
-                    <td rowSpan={2} className="px-3 py-2.5 font-semibold text-[#0F1733] align-top border-r border-[#E4E7F1]">Platform</td>
-                    <td className="px-3 py-2.5 text-[#0F1733]">Increase Savings Capture Rate by improving On-Contract Spend</td>
-                    <td className="px-3 py-2.5 text-[#5A6180]">Smart Intake & Orchestration</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{formatCurrency(data['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Smart_Intake_and_Orchestration'])}</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">(PO Spend × On-Contract% − 20%) × 0.04 + (PO Spend × Off-Contracts% − 20%) × 0.04 × 0.15</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">20% spend on contract</td>
-                  </tr>); })()} 
-                  {(() => { const isNA2 = !data.PO_Processing_Efficiency_smart_intake_and_orchestration; return (
-                  <tr className={`border-b border-[#E4E7F1] ${isNA2 ? 'opacity-40' : ''}`}>
-                    <td className="px-3 py-2.5 text-[#0F1733]">PO Processing Efficiency</td>
-                    <td className="px-3 py-2.5 text-[#5A6180]">Smart Intake & Orchestration</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{formatDayReduction(data.PO_Processing_Efficiency_smart_intake_and_orchestration)}</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycletime − CY Requisition Cycle Time</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">6−7 business days</td>
-                  </tr>); })()}
+                  {(() => {
+                    const isNA1 = parseNumericValue(data['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Smart_Intake_and_Orchestration']) == null; return (
+                      <tr className={`border-b border-[#E4E7F1] ${isNA1 ? 'opacity-40' : ''}`}>
+                        <td rowSpan={2} className="px-3 py-2.5 font-semibold text-[#0F1733] align-top border-r border-[#E4E7F1]">Platform</td>
+                        <td className="px-3 py-2.5 text-[#0F1733]">Increase Savings Capture Rate by improving On-Contract Spend</td>
+                        <td className="px-3 py-2.5 text-[#5A6180]">Smart Intake & Orchestration</td>
+                        <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{formatCurrency(data['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Smart_Intake_and_Orchestration'])}</td>
+                        <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">(PO Spend × On-Contract% − 20%) × 0.04 + (PO Spend × Off-Contracts% − 20%) × 0.04 × 0.15</td>
+                        <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">20% spend on contract</td>
+                      </tr>);
+                  })()}
+                  {(() => {
+                    const isNA2 = !data.PO_Processing_Efficiency_smart_intake_and_orchestration; return (
+                      <tr className={`border-b border-[#E4E7F1] ${isNA2 ? 'opacity-40' : ''}`}>
+                        <td className="px-3 py-2.5 text-[#0F1733]">PO Processing Efficiency</td>
+                        <td className="px-3 py-2.5 text-[#5A6180]">Smart Intake & Orchestration</td>
+                        <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{formatDayReduction(data.PO_Processing_Efficiency_smart_intake_and_orchestration)}</td>
+                        <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycletime − CY Requisition Cycle Time</td>
+                        <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">6−7 business days</td>
+                      </tr>);
+                  })()}
 
                   {/* Procure to Pay */}
                   <tr className="border-b border-[#E4E7F1]">
@@ -421,33 +447,39 @@ const SnapshotTab = ({ accountName, clientName, forceRefresh = false }) => {
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">{data['Increase_Savings_Capture_Rate_by_improving_On-Contract_Spend_Core_Procurement_formula']}</td>
                     <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">20% spend on contract</td>
                   </tr>
-                  {(() => { const isNA = !data.PO_Processing_Efficiency_Core_Procurement; return (
-                  <tr className={`border-b border-[#E4E7F1] ${isNA ? 'opacity-40' : ''}`}>
-                    <td className="px-3 py-2.5 text-[#0F1733]">PO Processing Efficiency</td>
-                    <td className="px-3 py-2.5 text-[#5A6180]">Core Procurement</td>
-                   <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{formatDayReduction(data.PO_Processing_Efficiency_Core_Procurement)}</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycle time − CY Requisition Cycle Time</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">6−7 business days</td>
-                  </tr>); })()}
+                  {(() => {
+                    const isNA = !data.PO_Processing_Efficiency_Core_Procurement; return (
+                      <tr className={`border-b border-[#E4E7F1] ${isNA ? 'opacity-40' : ''}`}>
+                        <td className="px-3 py-2.5 text-[#0F1733]">PO Processing Efficiency</td>
+                        <td className="px-3 py-2.5 text-[#5A6180]">Core Procurement</td>
+                        <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{formatDayReduction(data.PO_Processing_Efficiency_Core_Procurement)}</td>
+                        <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Benchmark Cycle time − CY Requisition Cycle Time</td>
+                        <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">6−7 business days</td>
+                      </tr>);
+                  })()}
 
                   {/* Strategic Sourcing */}
-                  {(() => { const isNA = data.Increase_Spend_On_Contract_Through_More_Sourcing_Activities === 'NA' || data.Increase_Spend_On_Contract_Through_More_Sourcing_Activities == null; return (
-                  <tr className={`border-b border-[#E4E7F1] ${isNA ? 'opacity-40' : ''}`}>
-                    <td rowSpan={2} className="px-3 py-2.5 font-semibold text-[#0F1733] align-top border-r border-[#E4E7F1]">Strategic Sourcing</td>
-                    <td className="px-3 py-2.5 text-[#0F1733]">Increase Spend On Contract Through More Sourcing Activities</td>
-                    <td className="px-3 py-2.5 text-[#5A6180]">Coupa Sourcing / Coupa Sourcing Optimization</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{isNA ? ' — ' : formatCurrency(data.Increase_Spend_On_Contract_Through_More_Sourcing_Activities)}</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">(current year sourced spend % − benchmark sourced spend%) × sourced spend × 0.04%</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">15% of spend sourced annually</td>
-                  </tr>); })()} 
-                  {(() => { const isNA = data.Total_Sourcing_Savings === 'NA' || data.Total_Sourcing_Savings == null; return (
-                  <tr className={`border-b border-[#E4E7F1] ${isNA ? 'opacity-40' : ''}`}>
-                    <td className="px-3 py-2.5 text-[#0F1733]">Total Sourcing Savings</td>
-                    <td className="px-3 py-2.5 text-[#5A6180]">Coupa Sourcing / Coupa Sourcing Optimization</td>
-                    <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{isNA ? ' — ' : formatCurrency(data.Total_Sourcing_Savings)}</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Current year sourced spend × 0.04%</td>
-                    <td className="px-3 py-2.5 text-[#5A6180] text-[11px]"></td>
-                  </tr>); })()}
+                  {(() => {
+                    const isNA = data.Increase_Spend_On_Contract_Through_More_Sourcing_Activities === 'NA' || data.Increase_Spend_On_Contract_Through_More_Sourcing_Activities == null; return (
+                      <tr className={`border-b border-[#E4E7F1] ${isNA ? 'opacity-40' : ''}`}>
+                        <td rowSpan={2} className="px-3 py-2.5 font-semibold text-[#0F1733] align-top border-r border-[#E4E7F1]">Strategic Sourcing</td>
+                        <td className="px-3 py-2.5 text-[#0F1733]">Increase Spend On Contract Through More Sourcing Activities</td>
+                        <td className="px-3 py-2.5 text-[#5A6180]">Coupa Sourcing / Coupa Sourcing Optimization</td>
+                        <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{isNA ? ' — ' : formatCurrency(data.Increase_Spend_On_Contract_Through_More_Sourcing_Activities)}</td>
+                        <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">(current year sourced spend % − benchmark sourced spend%) × sourced spend × 0.04%</td>
+                        <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">15% of spend sourced annually</td>
+                      </tr>);
+                  })()}
+                  {(() => {
+                    const isNA = data.Total_Sourcing_Savings === 'NA' || data.Total_Sourcing_Savings == null; return (
+                      <tr className={`border-b border-[#E4E7F1] ${isNA ? 'opacity-40' : ''}`}>
+                        <td className="px-3 py-2.5 text-[#0F1733]">Total Sourcing Savings</td>
+                        <td className="px-3 py-2.5 text-[#5A6180]">Coupa Sourcing / Coupa Sourcing Optimization</td>
+                        <td className="px-3 py-2.5 font-semibold text-[#0F1733]">{isNA ? ' — ' : formatCurrency(data.Total_Sourcing_Savings)}</td>
+                        <td className="px-3 py-2.5 text-[#5A6180] text-[11px]">Current year sourced spend × 0.04%</td>
+                        <td className="px-3 py-2.5 text-[#5A6180] text-[11px]"></td>
+                      </tr>);
+                  })()}
 
                   {/* Supplier Information & Risk Management */}
                   <tr className="border-b border-[#E4E7F1] last:border-b-0 opacity-40">
